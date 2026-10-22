@@ -5,7 +5,7 @@ import {
   CircleHelp, Command, FileText, Inbox, LayoutDashboard, Link2, LockKeyhole,
   Mail, Plus, Search, Settings2, ShieldCheck, Users, Workflow
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const integrations = [
   { name: "Messagerie professionnelle", detail: "Connecteurs e-mail à venir", icon: Mail, status: "À configurer", tone: "violet" },
@@ -17,6 +17,67 @@ export default function Home() {
   const [active, setActive] = useState("Vue d'ensemble");
   const [query, setQuery] = useState("");
   const [showNotice, setShowNotice] = useState(true);
+  const [atprotoHandle, setAtprotoHandle] = useState("");
+  const [atprotoSession, setAtprotoSession] = useState<{ authenticated: boolean; did?: string } | null>(null);
+  const [atprotoLoading, setAtprotoLoading] = useState(false);
+  const [atprotoError, setAtprotoError] = useState("");
+  const [atprotoMessage, setAtprotoMessage] = useState("");
+
+  async function refreshAtprotoSession() {
+    try {
+      const response = await fetch("/oauth/session", { cache: "no-store" });
+      const data = await response.json();
+      setAtprotoSession(data);
+    } catch {
+      setAtprotoSession({ authenticated: false });
+    }
+  }
+
+  useEffect(() => {
+    void refreshAtprotoSession();
+    if (new URLSearchParams(window.location.search).get("atproto") === "login_failed") {
+      setAtprotoError("La connexion AT Protocol a échoué. Réessaie et vérifie que ton compte est accessible.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  async function handleAtprotoLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAtprotoLoading(true);
+    setAtprotoError("");
+    setAtprotoMessage("");
+    try {
+      const response = await fetch("/oauth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: atprotoHandle.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok || typeof data.redirectUrl !== "string") {
+        throw new Error(data.error || "Impossible de démarrer la connexion.");
+      }
+      window.location.assign(data.redirectUrl);
+    } catch (error) {
+      setAtprotoError(error instanceof Error ? error.message : "La connexion a échoué.");
+      setAtprotoLoading(false);
+    }
+  }
+
+  async function handleAtprotoLogout() {
+    setAtprotoLoading(true);
+    setAtprotoError("");
+    try {
+      const response = await fetch("/oauth/logout", { method: "POST" });
+      if (!response.ok) throw new Error("La déconnexion a échoué.");
+      setAtprotoSession({ authenticated: false });
+      setAtprotoMessage("Compte AT Protocol déconnecté.");
+    } catch {
+      setAtprotoError("Impossible de terminer la déconnexion. Réessaie.");
+    } finally {
+      setAtprotoLoading(false);
+    }
+  }
+
   const nav = [
     { label: "Vue d'ensemble", icon: LayoutDashboard },
     { label: "Organisations", icon: Building2 },
@@ -77,7 +138,27 @@ export default function Home() {
             <button className="primary-button" onClick={() => setActive("Organisations")}><Plus size={17} /> Ajouter une organisation</button>
           </div>
 
-          {showNotice && <div className="prototype-notice"><div className="notice-symbol"><LockKeyhole size={17} /></div><div><strong>Prototype en développement</strong><p>Les connexions, données et messages sont fictifs pour le moment. Aucun compte externe n'est connecté.</p></div><button onClick={() => setShowNotice(false)} aria-label="Fermer l'avertissement">×</button></div>}
+          {showNotice && <div className="prototype-notice"><div className="notice-symbol"><LockKeyhole size={17} /></div><div><strong>Prototype en développement</strong><p>La connexion AT Protocol est disponible en test. Les autres connexions, données et messages du tableau restent fictifs.</p></div><button onClick={() => setShowNotice(false)} aria-label="Fermer l'avertissement">×</button></div>}
+
+          <section className="panel atproto-login-panel">
+            <div className="panel-heading"><div><h2>Connexion AT Protocol</h2><p>Connecte-toi avec ton handle Bluesky ou ton identifiant AT Protocol.</p></div><div className="atproto-mark">at</div></div>
+            {atprotoSession?.authenticated ? (
+              <div className="atproto-session">
+                <div className="atproto-status-dot" />
+                <div className="atproto-session-copy"><strong>Compte connecté</strong><span>{atprotoSession.did}</span><small>Authentification confirmée par AT Protocol.</small></div>
+                <button className="small-outline" disabled={atprotoLoading} onClick={handleAtprotoLogout}>{atprotoLoading ? "Déconnexion…" : "Déconnecter"}</button>
+              </div>
+            ) : (
+              <form className="atproto-login-form" onSubmit={handleAtprotoLogin}>
+                <label htmlFor="atproto-handle">Handle ou DID</label>
+                <div className="atproto-input-row"><input id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="ex. nom.bsky.social ou did:plc:…" autoComplete="username" required maxLength={253} disabled={atprotoLoading} /><button className="primary-button" type="submit" disabled={atprotoLoading || !atprotoHandle.trim()}>{atprotoLoading ? "Redirection…" : "Se connecter"} <ArrowUpRight size={15} /></button></div>
+                <p className="atproto-privacy">Tu seras redirigé vers le service d'autorisation de ton compte. Kelo Hub ne te demandera jamais ton mot de passe ni ton code de validation.</p>
+              </form>
+            )}
+            {atprotoError && <p className="atproto-feedback error" role="alert">{atprotoError}</p>}
+            {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
+            <p className="atproto-scope-note"><ShieldCheck size={14} /> Pour le moment, cette connexion confirme uniquement ton identité. Elle n'autorise pas encore l'accès aux publications, aux messages ou aux autres données.</p>
+          </section>
 
           <div className="stats-grid">
             <article className="stat-card"><div className="stat-top"><span>Organisations</span><span className="stat-icon purple"><Building2 size={18} /></span></div><div className="stat-value">0 <small>connectée</small></div><div className="stat-foot"><span className="muted">Votre espace commence ici</span></div></article>
