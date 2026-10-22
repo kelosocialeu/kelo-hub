@@ -195,3 +195,12 @@ h1{font:800 clamp(24px,2.3vw,32px)/1.2 Manrope,sans-serif;letter-spacing:-1.2px;
 .settings-security-banner strong{font-size:11px;color:#42475b}
 .settings-security-banner p{font-size:10px;line-height:1.8;color:#7b8295;margin:6px 0 0}
 @media(max-width:580px){.settings-panel{padding:17px 14px}.settings-row{gap:12px;align-items:flex-start}.settings-row p{font-size:9px}.settings-row select{min-width:105px;padding:9px 7px}.settings-account{align-items:flex-start;flex-wrap:wrap}.settings-account .connection-status{margin-left:54px}.settings-permissions>div{grid-template-columns:18px minmax(0,1fr);gap:7px}.settings-permissions small{grid-column:2;text-align:left}.settings-security-banner{padding:13px}.settings-saved{font-size:9px}}
+
+
+.oauth-consent-info{margin:17px 0 18px;padding:12px 13px;font-size:10px;line-height:1.75}
+.oauth-consent-info svg{flex-shrink:0}
+.dashboard-shell.compact-mode .page-content{padding-top:19px}
+.dashboard-shell.compact-mode .dashboard-empty-panel{min-height:250px;padding:16px 18px}
+.dashboard-shell.compact-mode .connection-overview{padding:12px 15px;margin-bottom:12px}
+.dashboard-shell.compact-mode .sync-explainer{margin:10px 0 16px;padding:11px 13px}
+.dashboard-shell.compact-mode .panel{margin-bottom:12px}
