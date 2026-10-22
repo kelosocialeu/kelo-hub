@@ -67,6 +67,12 @@ export default function Home() {
 
   useEffect(() => {
     void refreshSession();
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("atproto") === "login_failed") {
+      setMode("login");
+      setAtprotoError("L’autorisation AT Protocol n’a pas abouti. Réessaie et vérifie que tu acceptes la demande d’accès.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     try {
       const saved = window.localStorage.getItem("kelo_hub_preferences");
       if (saved) setSettings(current => ({ ...current, ...JSON.parse(saved) }));
