@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         convoId,
         message: { text },
       });
-      return NextResponse.json({ success: true, message: result.data.message });
+      return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: "Action inconnue." }, { status: 400 });
