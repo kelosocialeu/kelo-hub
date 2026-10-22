@@ -90,7 +90,7 @@ export async function loginAtproto(identifierInput: string, password: string, au
   const expectedDid = isEmail(identifier) ? null : await resolveDid(identifier);
   const discoveredPds = expectedDid ? await resolvePds(expectedDid) : null;
   const services = isEmail(identifier)
-    ? Array.from(new Set([process.env.NEXT_PUBLIC_KELO_PDS_URL, "https://eurosky.social", BLUESKY_ENTRYWAY].filter(Boolean) as string[]))
+    ? Array.from(new Set([process.env.NEXT_PUBLIC_KELO_PDS_URL, process.env.NEXT_PUBLIC_IDENTITY_VERIFICATION_PDS_URL, "https://eurosky.social", BLUESKY_ENTRYWAY].filter(Boolean) as string[]))
     : [loginServiceForPds(discoveredPds!)];
 
   let lastError: unknown;
@@ -99,7 +99,7 @@ export async function loginAtproto(identifierInput: string, password: string, au
       service,
       persistSession: (_event, session) => {
         if (session?.accessJwt && session.refreshJwt && session.handle && session.did) {
-          const pdsUrl = discoveredPds || getStoredAtprotoSession()?.pdsUrl || service;
+          const pdsUrl = discoveredPds || service;
           saveSession({ accessJwt: session.accessJwt, refreshJwt: session.refreshJwt, handle: session.handle, did: session.did, pdsUrl });
         }
       },
