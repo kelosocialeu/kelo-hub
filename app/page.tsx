@@ -6,6 +6,7 @@ import {
   RefreshCw, Settings2, ShieldCheck, Tag, Users, Workflow, Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type SessionState = { authenticated: boolean; did?: string };
 type PageMode = "home" | "login" | "dashboard";
@@ -125,7 +126,7 @@ export default function Home() {
     return (
       <main className="landing-page">
         <header className="landing-nav">
-          <a className="brand landing-brand" href="/" aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></a>
+          <Link className="brand landing-brand" href="/" aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></Link>
           <nav aria-label="Navigation du site"><a href="#fonctionnalites">Fonctionnalités</a><a href="#securite">Sécurité</a><button className="landing-login-link" onClick={() => setMode("login")}>Connexion <ArrowUpRight size={15}/></button></nav>
         </header>
         <section className="hero-section">
@@ -148,7 +149,7 @@ export default function Home() {
         </section>
         <section className="landing-features" id="fonctionnalites"><div className="section-kicker">PENSÉ POUR VOTRE ORGANISATION</div><h2>Moins de dispersion.<br/><span>Plus de visibilité.</span></h2><p className="section-description">Un espace préparé pour rassembler les informations utiles, sans inventer de données ni simuler des actions réelles.</p><div className="feature-grid"><article><div className="feature-icon"><Link2 size={20}/></div><h3>Comptes centralisés</h3><p>Une base claire pour organiser les comptes AT Protocol que vous autorisez.</p></article><article><div className="feature-icon"><Workflow size={20}/></div><h3>Contenu organisé</h3><p>Une interface prévue pour gérer publications et statuts quand les connexions seront prêtes.</p></article><article><div className="feature-icon"><Inbox size={20}/></div><h3>Interactions réunies</h3><p>Une future vue unifiée pour les messages, commentaires et mentions réels.</p></article></div></section>
         <section className="landing-security" id="securite"><div className="security-emblem"><LockKeyhole size={25}/></div><div><div className="section-kicker">TRANSPARENCE D'ABORD</div><h2>Pas de chiffres inventés.<br/>Pas de fausse activité.</h2><p>Kelo Hub affiche les informations réellement disponibles. Certaines fonctions de synchronisation sont encore en développement et ne sont pas présentées comme actives.</p></div><button className="small-outline" onClick={() => setMode("login")}>Ouvrir ma session <ArrowRight size={14}/></button></section>
-        <footer className="landing-footer"><a className="brand footer-brand" href="/"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></a><span>© 2026 Kelo Hub · En développement</span><button onClick={() => setMode("login")}>Connexion <ArrowUpRight size={14}/></button></footer>
+        <footer className="landing-footer"><Link className="brand footer-brand" href="/"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></Link><span>© 2026 Kelo Hub · En développement</span><button onClick={() => setMode("login")}>Connexion <ArrowUpRight size={14}/></button></footer>
       </main>
     );
   }
@@ -158,7 +159,7 @@ export default function Home() {
       <main className="auth-gate login-page">
         <button className="login-back" onClick={() => { setMode("home"); setAtprotoError(""); }}><ArrowRight size={15}/> Retour à l'accueil</button>
         <section className="auth-card login-card">
-          <a className="brand auth-brand" href="/" onClick={event => { event.preventDefault(); setMode("home"); }} aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></a>
+          <Link className="brand auth-brand" href="/" onClick={event => { event.preventDefault(); setMode("home"); }} aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></Link>
           <div className="auth-eyebrow"><span className="eyebrow-dot" /> ESPACE PRIVÉ</div>
           <h1>Ravi de vous retrouver.</h1>
           <p className="auth-description">Connectez-vous avec votre identité AT Protocol pour accéder à votre espace Kelo Hub.</p>
@@ -192,7 +193,7 @@ export default function Home() {
   return (
     <main className={settings.compactMode ? "app-shell dashboard-shell compact-mode" : "app-shell dashboard-shell"}>
       <aside className="sidebar">
-        <a className="brand" href="/" onClick={event => { event.preventDefault(); setMode("home"); }} aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></a>
+        <Link className="brand" href="/" onClick={event => { event.preventDefault(); setMode("home"); }} aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></Link>
         <div className="workspace-switch"><div className="workspace-avatar">K</div><div className="workspace-label"><strong>Mon organisation</strong><span title={atprotoSession.did}>{atprotoSession.did || "Identité AT Protocol"}</span></div></div>
         <p className="nav-heading">ESPACE ADMINISTRATEUR</p>
         <nav className="main-nav" aria-label="Navigation principale">{navigation.map(({ label, icon: Icon }) => <button key={label} className={active === label ? "nav-item active" : "nav-item"} onClick={() => setActive(label)}><Icon size={18} strokeWidth={1.8}/><span>{label}</span></button>)}</nav>
