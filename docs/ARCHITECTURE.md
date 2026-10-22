@@ -104,13 +104,13 @@ Recommended approach:
 
 ## UI prototype status (2026-10-22)
 
-The dashboard now includes an authentication gate, an account-list prototype, multi-account post-target selection, a draft list, and separate message/comment/mention reply workspaces. Account additions and inbox items are fictional demo data held only in page state. They reset on refresh and do not connect or publish to AT Protocol. These views are design scaffolding only until the durable database schema, tenant authorization, and OAuth flows are implemented and tested end to end.
+The dashboard includes an authentication gate, post-target selection UI, a draft list, and separate message/comment/mention workspaces. The AT Protocol account page now supports real additional-account OAuth consent and lists sessions that the server can restore. The signed account DID list is held in an HttpOnly cookie (currently limited to 25 accounts); OAuth state and session objects remain in process memory, so a Render restart may invalidate sessions. Inbox and publishing controls remain design scaffolding and do not send content.
 
 
 ## Current UI and OAuth milestone (2026-10-22)
 
 The login form now redirects to the official AT Protocol OAuth authorization flow; Kelo Hub does not collect third-party passwords or one-time codes. The callback sets an HttpOnly cookie containing the active DID, and the server restores the OAuth session on dashboard load. OAuth requests currently use only the `atproto` scope for identity confirmation.
 
-The settings screen stores user preferences in browser localStorage and displays the active OAuth identity. It does not yet provide organization roles, durable preferences, granular content scopes, or multi-account connection management. The dashboard does not yet synchronize or publish posts, messages, comments, or mentions.
+The settings screen stores user preferences in browser localStorage and displays the active OAuth identity. The “Comptes AT Protocol” admin section supports linking additional identities through their own OAuth consent and validates that the server can restore each linked session. It does not yet provide organization roles, durable database-backed account metadata, granular content scopes, or content synchronization. The dashboard does not yet synchronize or publish posts, messages, comments, or mentions.
 
 Before production use, replace the in-memory OAuth state/session maps with durable protected storage and test the full flow against multiple PDS implementations.
