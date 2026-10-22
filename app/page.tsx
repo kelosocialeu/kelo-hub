@@ -7,6 +7,7 @@ import {
   Tag, Users, Workflow, X, Image as ImageIcon, CalendarClock
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { getStoredAtprotoSession, loginAtproto, logoutAtproto } from "@/lib/auth/atproto-browser";
 
 type Account = { id: string; name: string; handle: string; initials: string; color: string; demo?: boolean };
 type InboxItem = { id: number; kind: "message" | "comment" | "tag"; accountId: string; author: string; handle: string; text: string; time: string; replied?: boolean };
@@ -30,6 +31,8 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [showNotice, setShowNotice] = useState(true);
   const [atprotoHandle, setAtprotoHandle] = useState("");
+  const [atprotoPassword, setAtprotoPassword] = useState("");
+  const [authFactorToken, setAuthFactorToken] = useState("");
   const [atprotoSession, setAtprotoSession] = useState<{ authenticated: boolean; did?: string } | null>(null);
   const [atprotoLoading, setAtprotoLoading] = useState(false);
   const [atprotoError, setAtprotoError] = useState("");
@@ -46,13 +49,8 @@ export default function Home() {
   const [showAddAccount, setShowAddAccount] = useState(false);
 
   async function refreshAtprotoSession() {
-    try {
-      const response = await fetch("/oauth/session", { cache: "no-store" });
-      const data = await response.json();
-      setAtprotoSession(data);
-    } catch {
-      setAtprotoSession({ authenticated: false });
-    }
+    const session = getStoredAtprotoSession();
+    setAtprotoSession(session ? { authenticated: true, did: session.did } : { authenticated: false });
   }
 
   useEffect(() => {
@@ -67,10 +65,11 @@ export default function Home() {
     event.preventDefault();
     setAtprotoLoading(true); setAtprotoError(""); setAtprotoMessage("");
     try {
-      const response = await fetch("/oauth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle: atprotoHandle.trim() }) });
-      const data = await response.json();
-      if (!response.ok || typeof data.redirectUrl !== "string") throw new Error(data.error || "Impossible de démarrer la connexion.");
-      window.location.assign(data.redirectUrl);
+      const session = await loginAtproto(atprotoHandle, atprotoPassword, authFactorToken);
+      setAtprotoSession({ authenticated: true, did: session.did });
+      setAtprotoPassword("");
+      setAuthFactorToken("");
+      setAtprotoMessage("Connexion AT Protocol réussie.");
     } catch (error) {
       setAtprotoError(error instanceof Error ? error.message : "La connexion a échoué.");
       setAtprotoLoading(false);
@@ -80,10 +79,10 @@ export default function Home() {
   async function handleAtprotoLogout() {
     setAtprotoLoading(true); setAtprotoError("");
     try {
-      const response = await fetch("/oauth/logout", { method: "POST" });
-      if (!response.ok) throw new Error("La déconnexion a échoué.");
+      logoutAtproto();
       setAtprotoSession({ authenticated: false }); setAccounts([]);
-      setAtprotoMessage("Compte AT Protocol déconnecté.");
+      setAtprotoPassword(""); setAuthFactorToken("");
+      setAtprotoMessage("Session AT Protocol supprimée de cet appareil.");
     } catch { setAtprotoError("Impossible de terminer la déconnexion. Réessaie."); }
     finally { setAtprotoLoading(false); }
   }
@@ -138,9 +137,13 @@ export default function Home() {
         <p className="auth-description">Connectez-vous avec l'identité AT Protocol de votre entreprise pour accéder à son espace d'administration.</p>
         <div className="auth-security"><LockKeyhole size={17} /><span>Connexion sécurisée via le service officiel de votre compte. Votre mot de passe n'est jamais demandé par Kelo Hub.</span></div>
         <form className="atproto-login-form" onSubmit={handleAtprotoLogin}>
-          <label htmlFor="atproto-handle">Handle ou DID de l'entité</label>
-          <div className="auth-input-row"><input id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="ex. entreprise.bsky.social" autoComplete="username" required maxLength={253} disabled={atprotoLoading} /><button className="primary-button" type="submit" disabled={atprotoLoading || !atprotoHandle.trim()}>{atprotoLoading ? "Redirection…" : "Se connecter"} <ArrowUpRight size={15} /></button></div>
-          <p className="atproto-privacy">Après authentification, vous serez redirigé vers le tableau de bord associé à votre identité. L'isolation des organisations devra être activée côté serveur avant l'ouverture au public.</p>
+          <label htmlFor="atproto-handle">Adresse e-mail, handle ou DID</label>
+          <div className="auth-input-row"><input id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="ex. nom@domaine.be ou entreprise.bsky.social" autoComplete="username" required maxLength={253} disabled={atprotoLoading} /></div>
+          <label htmlFor="atproto-password">Mot de passe du compte AT Protocol</label>
+          <input id="atproto-password" type="password" value={atprotoPassword} onChange={event => setAtprotoPassword(event.target.value)} autoComplete="current-password" required disabled={atprotoLoading} />
+          {atprotoError.includes("code de connexion") && <><label htmlFor="auth-factor-token">Code de connexion reçu par e-mail</label><input id="auth-factor-token" value={authFactorToken} onChange={event => setAuthFactorToken(event.target.value)} autoComplete="one-time-code" inputMode="numeric" disabled={atprotoLoading} /></>}
+          <button className="primary-button" type="submit" disabled={atprotoLoading || !atprotoHandle.trim() || !atprotoPassword}>{atprotoLoading ? "Connexion…" : "Se connecter"} <ArrowUpRight size={15} /></button>
+          <p className="atproto-privacy">Kelo Hub détecte automatiquement le PDS associé au handle ou au DID. Les identifiants sont envoyés au service AT Protocol découvert pour authentification ; ils ne sont pas enregistrés par Kelo Hub.</p>
         </form>
         {atprotoError && <p className="atproto-feedback error" role="alert">{atprotoError}</p>}
         {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
