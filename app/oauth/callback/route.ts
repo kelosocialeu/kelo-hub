@@ -24,14 +24,18 @@ export async function GET(request: NextRequest) {
     if (linking) {
       if (!primaryDid?.startsWith("did:")) {
         await client.revoke(session.did).catch(() => undefined);
-        return NextResponse.redirect(new URL("/?atproto=link_failed", APP_BASE_URL));
+        const failed = NextResponse.redirect(new URL("/?atproto=link_failed", APP_BASE_URL));
+        failed.cookies.set(LINK_INTENT_COOKIE, "", { httpOnly: true, secure: APP_BASE_URL.startsWith("https://"), sameSite: "lax", maxAge: 0, path: "/" });
+        return failed;
       }
       await client.restore(primaryDid);
       const previous = readAccountsCookie(cookieStore.get(ACCOUNTS_COOKIE)?.value) ?? [primaryDid];
       const dids = [...new Set([primaryDid, ...previous, session.did])];
       if (dids.length > MAX_LINKED_ACCOUNTS) {
         await client.revoke(session.did).catch(() => undefined);
-        return NextResponse.redirect(new URL("/?atproto=link_limit", APP_BASE_URL));
+        const failed = NextResponse.redirect(new URL("/?atproto=link_limit", APP_BASE_URL));
+        failed.cookies.set(LINK_INTENT_COOKIE, "", { httpOnly: true, secure: APP_BASE_URL.startsWith("https://"), sameSite: "lax", maxAge: 0, path: "/" });
+        return failed;
       }
       setAccountsCookie(response, dids);
     } else {
