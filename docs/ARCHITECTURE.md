@@ -94,7 +94,7 @@ Important: AT Protocol OAuth sign-in currently establishes a single identity onl
 Do not store OAuth access tokens, refresh tokens, private signing keys, or session credentials in AT Protocol records. AT Protocol is the identity/content network, not Kelo Hub's private credential vault; writing secrets to user-visible records would be unsafe and the protocol does not provide Kelo Hub with a private application-owned secret store.
 
 Recommended approach:
-- Use PostgreSQL for organization memberships, connected-account metadata, post drafts, scheduled jobs, inbox references, and audit events. Supabase Postgres is a reasonable Alpha choice if its current pricing and region suit the project.
+- Use PostgreSQL for organization memberships, connected-account metadata, post drafts, scheduled jobs, inbox references, and audit events. Supabase Postgres is a reasonable choice for the prototype if its current pricing and region suit the project.
 - Store OAuth credentials server-side only. Encrypt sensitive credential payloads before database persistence using authenticated encryption (for example AES-256-GCM) with the encryption key held only in Render environment secrets or a managed KMS—not in the same database row or repository.
 - Use Supabase Row Level Security as defense in depth, but never rely on RLS alone: server routes must validate the authenticated session, organization membership, role, account ownership, and requested scopes for every operation. Keep the service-role key server-only.
 - Prefer durable database-backed OAuth state/session storage with expiry and one-time state consumption. Add CSRF protection, rate limiting, audit logs, backup/restore testing, and revocation/disconnect handling.
