@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { ATPROTO_SCOPE, APP_BASE_URL, getOAuthClient } from "@/lib/auth/client";
+import { LINK_INTENT_COOKIE, PRIMARY_DID_COOKIE } from "@/lib/auth/accounts-cookie";
 
 export const runtime = "nodejs";
 
@@ -39,6 +41,9 @@ export async function POST(request: NextRequest) {
       typeof body.handle === "string"
         ? body.handle.trim()
         : "";
+    const intent = typeof body === "object" && body !== null && "intent" in body && body.intent === "link"
+      ? "link"
+      : "login";
 
     if (!handle || handle.length > 253 || /\\s/.test(handle)) {
       return NextResponse.json(
@@ -50,8 +55,26 @@ export async function POST(request: NextRequest) {
     // NodeOAuthClient resolves the handle/DID through AT Protocol discovery.
     // The user does not need to know or manually enter their PDS URL.
     const client = await getOAuthClient();
+    const cookieStore = await cookies();
+    if (intent === "link") {
+      const primaryDid = cookieStore.get(PRIMARY_DID_COOKIE)?.value;
+      if (!primaryDid?.startsWith("did:")) {
+        return NextResponse.json({ error: "Reconnecte-toi avant de lier un autre compte." }, { status: 401 });
+      }
+      // Linking is only allowed from an authenticated Kelo Hub session.
+      await client.restore(primaryDid);
+    }
+
     const authUrl = await client.authorize(handle, { scope: ATPROTO_SCOPE, prompt: "consent" });
-    return NextResponse.json({ redirectUrl: authUrl.toString() });
+    const response = NextResponse.json({ redirectUrl: authUrl.toString() });
+    response.cookies.set(LINK_INTENT_COOKIE, intent === "link" ? "link" : "", {
+      httpOnly: true,
+      secure: APP_BASE_URL.startsWith("https://"),
+      sameSite: "lax",
+      maxAge: intent === "link" ? 10 * 60 : 0,
+      path: "/",
+    });
+    return response;
   } catch {
     return NextResponse.json(
       { error: "Impossible de démarrer OAuth. Vérifie le handle/DID, la découverte du PDS et la configuration OAuth de Kelo Hub." },
