@@ -48,6 +48,8 @@ export default function Home() {
   const [lastChecked, setLastChecked] = useState<string | null>(null);
   const [atprotoError, setAtprotoError] = useState("");
   const [atprotoMessage, setAtprotoMessage] = useState("");
+  const [settings, setSettings] = useState({ language: "fr", compactMode: false, confirmActions: true, syncOnOpen: false });
+  const [settingsSaved, setSettingsSaved] = useState(false);
 
   function refreshSession() {
     const session = getStoredAtprotoSession();
@@ -63,7 +65,20 @@ export default function Home() {
     const session = getStoredAtprotoSession();
     setAtprotoSession(session ? { authenticated: true, did: session.did } : { authenticated: false });
     setLastChecked(new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }));
+    try {
+      const saved = window.localStorage.getItem("kelo_hub_preferences");
+      if (saved) setSettings(current => ({ ...current, ...JSON.parse(saved) }));
+    } catch { /* Ignore invalid local preferences and keep safe defaults. */ }
   }, []);
+
+  function updateSetting<K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) {
+    setSettings(current => {
+      const next = { ...current, [key]: value };
+      try { window.localStorage.setItem("kelo_hub_preferences", JSON.stringify(next)); } catch { /* Preferences remain active for this session. */ }
+      return next;
+    });
+    setSettingsSaved(true);
+  }
 
   async function handleAtprotoLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -184,8 +199,31 @@ export default function Home() {
           <div className="dashboard-welcome"><div><div className="eyebrow"><span className="eyebrow-dot"/> {page.eyebrow}</div><h1>{page.title}</h1><p>{page.description}</p></div><div className="last-sync"><span>Dernière vérification de session</span><strong>{lastChecked ? "Aujourd'hui, " + lastChecked : "Pas encore vérifiée"}</strong></div></div>
           <div className="connection-overview"><div className="connection-overview-icon"><ShieldCheck size={21}/></div><div className="connection-overview-copy"><strong>Identité AT Protocol connectée</strong><span title={atprotoSession.did}>{atprotoSession.did || "Identité confirmée par la session locale"}</span><small>Cette vérification concerne la session, pas la synchronisation des publications ou des messages.</small></div><span className="connection-status"><i/> Connectée</span></div>
           {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
-          <section className="panel dashboard-empty-panel"><div className="panel-heading"><div><h2>{active === "Vue d'ensemble" ? "État de votre espace" : page.title}</h2><p>Les données ne sont affichées que lorsqu'elles sont disponibles depuis une source réelle.</p></div><span className="data-source-label"><span/> Données réelles uniquement</span></div><div className="empty-state compact"><div className="empty-illustration"><PageIcon size={24}/></div><strong>{page.emptyTitle}</strong><p>{page.emptyDescription}</p></div></section>
-          <div className="sync-explainer"><RefreshCw size={16}/><p><strong>À propos de la synchronisation</strong><span>La vérification ci-dessus relit la session AT Protocol enregistrée sur cet appareil. La synchronisation automatique des publications, messages, commentaires et comptes supplémentaires n'est pas encore connectée.</span></p></div>
+          {active === "Paramètres" ? (
+            <div className="settings-layout">
+              <section className="panel settings-panel">
+                <div className="panel-heading"><div><h2>Préférences de l’espace</h2><p>Ces préférences sont enregistrées dans ce navigateur.</p></div><Settings2 size={19}/></div>
+                <div className="settings-row"><div><strong>Langue de l’interface</strong><p>Langue d’affichage des menus Kelo Hub.</p></div><select value={settings.language} onChange={event => updateSetting("language", event.target.value)} aria-label="Langue de l’interface"><option value="fr">Français</option><option value="en">English</option><option value="nl">Nederlands</option></select></div>
+                <div className="settings-row"><div><strong>Interface compacte</strong><p>Réduire les espacements pour afficher plus d’informations.</p></div><button className={settings.compactMode ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.compactMode} onClick={() => updateSetting("compactMode", !settings.compactMode)}><span/></button></div>
+                <div className="settings-row"><div><strong>Confirmer les actions sensibles</strong><p>Préférence pour les futures actions de publication et de gestion.</p></div><button className={settings.confirmActions ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.confirmActions} onClick={() => updateSetting("confirmActions", !settings.confirmActions)}><span/></button></div>
+                <div className="settings-row"><div><strong>Vérifier la session à l’ouverture</strong><p>Préférence enregistrée, sans synchronisation de contenu automatique pour le moment.</p></div><button className={settings.syncOnOpen ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.syncOnOpen} onClick={() => updateSetting("syncOnOpen", !settings.syncOnOpen)}><span/></button></div>
+                {settingsSaved && <p className="settings-saved" role="status"><CheckCircle2 size={15}/> Préférences enregistrées sur cet appareil.</p>}
+              </section>
+              <section className="panel settings-panel">
+                <div className="panel-heading"><div><h2>Compte AT Protocol connecté</h2><p>Identité actuellement utilisée par Kelo Hub.</p></div><Link2 size={19}/></div>
+                <div className="settings-account"><div className="settings-account-icon"><ShieldCheck size={21}/></div><div><strong>{atprotoSession.did || "Identité AT Protocol"}</strong><span>{getStoredAtprotoSession()?.handle || "Handle indisponible"}</span><small>Session enregistrée dans ce navigateur</small></div><span className="connection-status"><i/> Active</span></div>
+                <div className="settings-note"><ShieldCheck size={17}/><p><strong>À propos des autorisations</strong><span>La connexion actuelle utilise une session AT Protocol classique. Elle ne propose pas encore une autorisation OAuth granulaire par permission. Les contrôles d’accès fins, la connexion de plusieurs comptes et la révocation côté serveur nécessitent encore l’intégration OAuth et un stockage serveur sécurisé.</span></p></div>
+                <div className="settings-permissions"><div><CheckCircle2 size={15}/><span>Identité du compte et DID</span><small>Session actuelle</small></div><div><LockKeyhole size={15}/><span>Accès aux fonctions AT Protocol</span><small>Selon les droits du compte connecté</small></div><div><ShieldCheck size={15}/><span>Déconnexion locale</span><small>Supprime la session de ce navigateur</small></div></div>
+                <button className="settings-danger-button" onClick={handleLogout}><LogOut size={15}/> Déconnecter ce compte</button>
+              </section>
+              <section className="settings-security-banner"><LockKeyhole size={19}/><div><strong>Protection de votre compte</strong><p>N’utilisez pas le mot de passe principal d’un compte si votre service propose un mot de passe d’application. Kelo Hub ne doit pas être considéré comme un système OAuth à permissions fines tant que cette intégration n’est pas terminée.</p></div></section>
+            </div>
+          ) : (
+            <>
+              <section className="panel dashboard-empty-panel"><div className="panel-heading"><div><h2>{active === "Vue d'ensemble" ? "État de votre espace" : page.title}</h2><p>Les données ne sont affichées que lorsqu'elles sont disponibles depuis une source réelle.</p></div><span className="data-source-label"><span/> Données réelles uniquement</span></div><div className="empty-state compact"><div className="empty-illustration"><PageIcon size={24}/></div><strong>{page.emptyTitle}</strong><p>{page.emptyDescription}</p></div></section>
+              <div className="sync-explainer"><RefreshCw size={16}/><p><strong>À propos de la synchronisation</strong><span>La vérification ci-dessus relit la session AT Protocol enregistrée sur cet appareil. La synchronisation automatique des publications, messages, commentaires et comptes supplémentaires n'est pas encore connectée.</span></p></div>
+            </>
+          )}
           <footer className="page-footer"><span>© 2026 Kelo Hub</span><span><ShieldCheck size={14}/> Aucun contenu de démonstration</span></footer>
         </div>
       </section>
