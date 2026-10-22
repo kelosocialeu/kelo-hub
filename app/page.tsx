@@ -144,7 +144,7 @@ export default function Home() {
         </form>
         {atprotoError && <p className="atproto-feedback error" role="alert">{atprotoError}</p>}
         {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
-        <p className="auth-footer"><ShieldCheck size={14} /> Kelo Hub Alpha · Les connexions supplémentaires ne sont pas encore réelles.</p>
+        <p className="auth-footer"><ShieldCheck size={14} /> Kelo Hub · Les connexions supplémentaires ne sont pas encore réelles.</p>
       </section>
     </main>
   );
@@ -169,7 +169,7 @@ export default function Home() {
       <section className="main-panel">
         <header className="topbar"><div className="breadcrumbs"><span>Mon organisation</span><span className="crumb-slash">/</span><strong>{active}</strong></div><div className="topbar-actions"><label className="search-box"><Search size={16} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher..." aria-label="Rechercher" /></label><button className="icon-button notification-button" aria-label="Notifications"><Bell size={18} /><i /></button><div className="top-avatar">AT</div></div></header>
         <div className="page-content">
-          {showNotice && <div className="prototype-notice"><div className="notice-symbol"><LockKeyhole size={17} /></div><div><strong>Interface Alpha — données de démonstration</strong><p>La connexion principale utilise AT Protocol. Les comptes supplémentaires, les messages et les publications affichés ci-dessous sont des maquettes interactives : aucune action n'est envoyée au réseau.</p></div><button onClick={() => setShowNotice(false)} aria-label="Fermer l'avertissement"><X size={16} /></button></div>}
+          {showNotice && <div className="prototype-notice"><div className="notice-symbol"><LockKeyhole size={17} /></div><div><strong>Interface de démonstration — fonctionnalités en cours de développement</strong><p>La connexion principale utilise AT Protocol. Les comptes supplémentaires, les messages et les publications affichés ci-dessous sont des maquettes interactives : aucune action n'est envoyée au réseau.</p></div><button onClick={() => setShowNotice(false)} aria-label="Fermer l'avertissement"><X size={16} /></button></div>}
 
           {active === "Vue d'ensemble" && <>
             <div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> ESPACE DE VOTRE ENTITÉ</div><h1>Votre espace de pilotage.</h1><p>Gérez les comptes AT Protocol de votre organisation depuis un tableau de bord unique.</p></div><button className="primary-button" onClick={() => setActive("Comptes AT Protocol")}><Plus size={17} /> Ajouter un compte</button></div>
@@ -214,7 +214,7 @@ export default function Home() {
 
           {(active === "Journal d'activité" || active === "Paramètres") && <><PageTitle eyebrow={active === "Paramètres" ? "CONFIGURATION" : "SÉCURITÉ"} title={active} description={active === "Paramètres" ? "Les réglages de votre espace et les connexions autorisées." : "Les événements de sécurité et les changements importants de votre organisation."}/><section className="panel"><div className="empty-state compact"><div className="empty-illustration">{active === "Paramètres" ? <Settings2 size={24}/> : <FileText size={24}/>}</div><strong>{active === "Paramètres" ? "Paramètres à venir" : "Aucun événement réel enregistré"}</strong><p>{active === "Paramètres" ? "Les préférences, les autorisations et les sessions seront configurables après la mise en place de la persistance sécurisée." : "Un journal d'audit serveur sera nécessaire pour suivre les connexions, changements de droits et envois."}</p></div></section></>}
 
-          <footer className="page-footer"><span>© 2026 Kelo Hub · Prototype Alpha</span><span><ShieldCheck size={14}/> Les actions de cette maquette ne sont pas envoyées au réseau</span></footer>
+          <footer className="page-footer"><span>© 2026 Kelo Hub · Prototype en développement</span><span><ShieldCheck size={14}/> Les actions de cette maquette ne sont pas envoyées au réseau</span></footer>
         </div>
       </section>
     </main>
