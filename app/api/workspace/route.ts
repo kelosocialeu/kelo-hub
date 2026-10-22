@@ -52,7 +52,11 @@ export async function GET(request: NextRequest) {
   const markSeen = request.nextUrl.searchParams.get("markSeen") === "true";
   const convoId = request.nextUrl.searchParams.get("convoId");
   try {
-    const accounts = await getConnectedAgents();
+    const connectedAccounts = await getConnectedAgents();
+    const selectedDid = request.nextUrl.searchParams.get("accountDid");
+    const accounts = convoId && selectedDid
+      ? connectedAccounts.filter(account => account.did === selectedDid)
+      : connectedAccounts;
     const results = await Promise.all(accounts.map(async ({ did, agent }) => {
       try {
         if (kind === "posts") {
