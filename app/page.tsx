@@ -47,6 +47,19 @@ export default function Home() {
   const [settings, setSettings] = useState({ language: "fr", compactMode: false, confirmActions: true, syncOnOpen: false });
   const [settingsSaved, setSettingsSaved] = useState(false);
 
+  function updateSetting<K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) {
+    setSettings(current => {
+      const next = { ...current, [key]: value };
+      try {
+        window.localStorage.setItem("kelo_hub_preferences", JSON.stringify(next));
+        setSettingsSaved(true);
+      } catch {
+        setSettingsSaved(false);
+      }
+      return next;
+    });
+  }
+
   async function refreshSession() {
     try {
       const response = await fetch("/oauth/session", { cache: "no-store", credentials: "same-origin" });
