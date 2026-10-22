@@ -105,3 +105,16 @@ Recommended approach:
 ## UI prototype status (2026-10-22)
 
 The dashboard now includes an authentication gate, an account-list prototype, multi-account post-target selection, a draft list, and separate message/comment/mention reply workspaces. Account additions and inbox items are fictional demo data held only in page state. They reset on refresh and do not connect or publish to AT Protocol. These views are design scaffolding only until the durable database schema, tenant authorization, and OAuth flows are implemented and tested end to end.
+
+
+## Kelo Social-style AT Protocol sign-in (implemented in Kelo Hub)
+
+The sign-in page now follows the same direct AT Protocol login pattern used by Kelo Social:
+- Accepts an email address, handle, or DID plus the account password.
+- For a handle/DID, resolves the DID and reads the `#atproto_pds` endpoint from the DID document before selecting the login service.
+- For email login, tries `NEXT_PUBLIC_KELO_PDS_URL`, `https://eurosky.social`, and `https://bsky.social` in sequence.
+- Supports the PDS email authentication-factor challenge by asking for the emailed code after the PDS requests it.
+- Stores the returned AT Protocol session in browser localStorage and restores the dashboard from that saved session, matching Kelo Social's current browser-side session pattern.
+- The password is submitted to the selected AT Protocol service; Kelo Hub does not save the password.
+
+**Security limitation:** this mirrors Kelo Social's current browser storage pattern, which keeps access and refresh JWTs in localStorage and is exposed to token theft if an XSS vulnerability occurs. Do not treat this as a hardened production session design. A future server-side HttpOnly session migration should be completed before handling high-risk accounts. The former OAuth routes remain in the repository but are no longer the login form's path.
