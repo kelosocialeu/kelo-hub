@@ -87,7 +87,8 @@ function isEmail(value: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value
 export async function loginAtproto(identifierInput: string, password: string, authFactorToken = ""): Promise<KeloHubAtpSession> {
   const identifier = normalizeIdentifier(identifierInput);
   if (!identifier || !password) throw new Error("Saisis ton identifiant et ton mot de passe.");
-  const discoveredPds = isEmail(identifier) ? null : await resolvePds(await resolveDid(identifier));
+  const expectedDid = isEmail(identifier) ? null : await resolveDid(identifier);
+  const discoveredPds = expectedDid ? await resolvePds(expectedDid) : null;
   const services = isEmail(identifier)
     ? Array.from(new Set([process.env.NEXT_PUBLIC_KELO_PDS_URL, "https://eurosky.social", BLUESKY_ENTRYWAY].filter(Boolean) as string[]))
     : [loginServiceForPds(discoveredPds!)];
@@ -106,6 +107,7 @@ export async function loginAtproto(identifierInput: string, password: string, au
     try {
       await withTimeout(agent.login({ identifier, password, ...(authFactorToken.trim() ? { authFactorToken: authFactorToken.trim() } : {}) } as Parameters<typeof agent.login>[0]), "Le serveur PDS met trop de temps à répondre. Réessaie.");
       if (!agent.session) throw new Error("Le PDS n'a pas retourné de session.");
+      if (expectedDid && agent.session.did !== expectedDid) throw new Error("La session retournée ne correspond pas au handle ou DID demandé.");
       const pdsUrl = discoveredPds || await resolvePds(agent.session.did);
       const session: KeloHubAtpSession = {
         accessJwt: agent.session.accessJwt,
