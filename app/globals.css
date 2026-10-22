@@ -204,3 +204,60 @@ h1{font:800 clamp(24px,2.3vw,32px)/1.2 Manrope,sans-serif;letter-spacing:-1.2px;
 .dashboard-shell.compact-mode .connection-overview{padding:12px 15px;margin-bottom:12px}
 .dashboard-shell.compact-mode .sync-explainer{margin:10px 0 16px;padding:11px 13px}
 .dashboard-shell.compact-mode .panel{margin-bottom:12px}
+
+
+/* Real AT Protocol workspace panels */
+.workspace-panel-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:17px;align-items:start}
+.workspace-main-panel{min-width:0}
+.workspace-refresh{display:inline-flex;align-items:center;gap:6px}
+.workspace-composer{display:grid;gap:10px;padding:3px 0 20px}
+.workspace-composer>label{font-size:11px;font-weight:700}
+.workspace-composer textarea,.workspace-message-composer textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px;color:var(--text);font:12px/1.7 'DM Sans',sans-serif}
+.workspace-account-targets{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.workspace-account-targets>strong{width:100%;font-size:10px}
+.workspace-account-targets>small{font-size:10px;color:var(--muted)}
+.workspace-account-choice{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:10px;color:#5e6478;overflow-wrap:anywhere}
+.workspace-account-choice input{accent-color:var(--primary)}
+.workspace-composer-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.workspace-composer-footer>span{font-size:10px;color:var(--muted)}
+.workspace-feed-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:16px 0 5px}
+.workspace-feed-heading strong{font-size:11px}.workspace-feed-heading span{font-size:9px;color:var(--muted)}
+.workspace-post{padding:15px 0;border-top:1px solid #f0f1f6}
+.workspace-item-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.workspace-item-top strong{font-size:11px}.workspace-item-top span,.workspace-item-top time{font-size:9px;color:var(--muted)}
+.workspace-post>p{font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0}
+.workspace-post>small,.workspace-notice small{font-size:9px;color:var(--muted)}
+.workspace-empty{min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;color:#8585e9;gap:9px}
+.workspace-empty strong{font-size:11px;color:var(--text)}
+.workspace-empty span{font-size:10px;line-height:1.7;color:var(--muted);max-width:300px}
+.workspace-messages-layout{display:grid;grid-template-columns:minmax(170px,.75fr) minmax(0,1.25fr);gap:15px;min-height:300px}
+.workspace-conversation-list{border-right:1px solid var(--line);padding-right:12px;min-width:0}
+.workspace-conversation{width:100%;display:flex;align-items:flex-start;gap:9px;text-align:left;padding:11px 7px;border:0;border-bottom:1px solid #f0f1f6;background:transparent;border-radius:8px}
+.workspace-conversation.active,.workspace-conversation:hover{background:#f4f4ff}
+.workspace-conversation-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:#efefff;color:var(--primary);flex-shrink:0}
+.workspace-conversation-copy{flex:1;min-width:0;display:grid;gap:4px}
+.workspace-conversation-copy strong{font-size:10px;overflow-wrap:anywhere}
+.workspace-conversation-copy small{font-size:9px;color:var(--muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.workspace-conversation-copy em{font-style:normal;font-size:8px;color:#999eb0}
+.workspace-unread-count{background:var(--primary);color:#fff;border-radius:20px;padding:3px 5px;font-size:9px;font-style:normal}
+.workspace-message-thread{min-width:0;display:flex;flex-direction:column;gap:10px}
+.workspace-thread-head{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:2px 0 10px;border-bottom:1px solid var(--line)}
+.workspace-thread-head strong{font-size:11px}.workspace-thread-head small{font-size:9px;color:var(--muted)}
+.workspace-message{padding:10px 11px;background:#f7f7fc;border-radius:10px;align-self:flex-start;max-width:95%;overflow-wrap:anywhere}
+.workspace-message strong{font-size:10px}.workspace-message p{font-size:11px;line-height:1.7;margin:5px 0;white-space:pre-wrap}.workspace-message time{font-size:8px;color:var(--muted)}
+.workspace-message-composer{display:flex;align-items:flex-end;gap:8px;margin-top:auto;padding-top:10px}
+.workspace-message-composer textarea{min-width:0;flex:1}
+.workspace-message-composer .primary-button{padding:10px 12px}
+.workspace-notification-actions{display:flex;justify-content:flex-end;margin-bottom:12px}
+.workspace-notification-actions button{display:inline-flex;align-items:center;gap:7px}
+.workspace-notice{display:flex;gap:11px;padding:14px 0;border-top:1px solid #f0f1f6}
+.workspace-notice-icon{width:33px;height:33px;display:grid;place-items:center;flex-shrink:0;border-radius:10px;background:#efefff;color:var(--primary)}
+.workspace-notice>div{flex:1;min-width:0}
+.workspace-notice p{font-size:10px;line-height:1.7;margin:7px 0;overflow-wrap:anywhere}
+.workspace-status-panel{position:sticky;top:15px}
+.workspace-status-row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #f0f1f6}
+.workspace-status-row span{font-size:10px;color:var(--muted)}
+.workspace-status-row strong{font-size:10px;text-align:right;overflow-wrap:anywhere}
+.workspace-status-note{font-size:10px;line-height:1.7;color:var(--muted);margin:12px 0 0}
+@media(max-width:1050px){.workspace-panel-layout{grid-template-columns:minmax(0,1fr)}.workspace-status-panel{position:static}.workspace-status-panel .panel-heading{margin-bottom:10px}}
+@media(max-width:650px){.workspace-messages-layout{grid-template-columns:1fr}.workspace-conversation-list{border-right:0;border-bottom:1px solid var(--line);padding:0 0 12px}.workspace-message-composer{align-items:stretch;flex-direction:column}.workspace-message-composer .primary-button{align-self:flex-end}.workspace-feed-heading{align-items:flex-start;flex-direction:column}.workspace-composer-footer{align-items:flex-start}.workspace-refresh{font-size:9px}}
