@@ -9,10 +9,12 @@ import {
 } from "@atproto/oauth-client-node";
 
 export const ATPROTO_SCOPE = "atproto";
-const FALLBACK_PUBLIC_URL = "https://kelo-hub-alpha.onrender.com";
-const PUBLIC_URL =
+export const APP_BASE_URL =
   process.env.APP_BASE_URL ||
-  (process.env.NODE_ENV === "production" ? FALLBACK_PUBLIC_URL : undefined);
+  (process.env.NODE_ENV === "production"
+    ? "https://kelo-hub-alpha.onrender.com"
+    : "http://127.0.0.1:3000");
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 type OAuthGlobal = typeof globalThis & {
   __keloHubOAuthState?: Map<string, NodeSavedState>;
@@ -25,19 +27,19 @@ runtime.__keloHubOAuthState ??= new Map<string, NodeSavedState>();
 runtime.__keloHubOAuthSessions ??= new Map<string, NodeSavedSession>();
 
 function getClientMetadata(): OAuthClientMetadataInput {
-  if (PUBLIC_URL) {
+  if (IS_PRODUCTION) {
     return {
-      client_id: `${PUBLIC_URL}/oauth-client-metadata.json`,
+      client_id: `${APP_BASE_URL}/oauth-client-metadata.json`,
       client_name: "Kelo Hub Alpha",
-      client_uri: PUBLIC_URL,
-      redirect_uris: [`${PUBLIC_URL}/oauth/callback`],
+      client_uri: APP_BASE_URL,
+      redirect_uris: [`${APP_BASE_URL}/oauth/callback`],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       scope: ATPROTO_SCOPE,
       application_type: "web",
       token_endpoint_auth_method: "private_key_jwt",
       token_endpoint_auth_signing_alg: "ES256",
-      jwks_uri: `${PUBLIC_URL}/.well-known/jwks.json`,
+      jwks_uri: `${APP_BASE_URL}/.well-known/jwks.json`,
       dpop_bound_access_tokens: true,
     };
   }
@@ -49,7 +51,7 @@ function getClientMetadata(): OAuthClientMetadataInput {
 }
 
 async function getKeyset(): Promise<Keyset | undefined> {
-  if (!PUBLIC_URL) return undefined;
+  if (!IS_PRODUCTION) return undefined;
 
   const privateKey = process.env.ATPROTO_OAUTH_PRIVATE_KEY;
   if (!privateKey) {
