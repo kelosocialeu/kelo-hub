@@ -64,7 +64,7 @@ The app sets baseline headers in `next.config.ts`. Before production, review a s
 - Runtime: Node.js 22.
 - Do not add credentials to GitHub. Store production values in Render environment settings.
 - For deployed AT Protocol OAuth, set `APP_BASE_URL` to the exact public URL configured for this Kelo Hub Render service and `ATPROTO_OAUTH_PRIVATE_KEY` in Render. The app refuses to initialize the production OAuth client if the private signing key is missing.
-- The current dashboard is only a static/client-side prototype; no authentication or persistence is implemented yet.
+- The dashboard uses server-side AT Protocol OAuth session restoration, but the state/session stores are in-memory and therefore not durable across restarts or multiple instances.
 
 ## Milestones
 
@@ -107,14 +107,10 @@ Recommended approach:
 The dashboard now includes an authentication gate, an account-list prototype, multi-account post-target selection, a draft list, and separate message/comment/mention reply workspaces. Account additions and inbox items are fictional demo data held only in page state. They reset on refresh and do not connect or publish to AT Protocol. These views are design scaffolding only until the durable database schema, tenant authorization, and OAuth flows are implemented and tested end to end.
 
 
-## Kelo Social-style AT Protocol sign-in (implemented in Kelo Hub)
+## Current UI and OAuth milestone (2026-10-22)
 
-The sign-in page now follows the same direct AT Protocol login pattern used by Kelo Social:
-- Accepts an email address, handle, or DID plus the account password.
-- For a handle/DID, resolves the DID and reads the `#atproto_pds` endpoint from the DID document before selecting the login service.
-- For email login, tries `NEXT_PUBLIC_KELO_PDS_URL`, `https://eurosky.social`, and `https://bsky.social` in sequence.
-- Supports the PDS email authentication-factor challenge by asking for the emailed code after the PDS requests it.
-- Stores the returned AT Protocol session in browser localStorage and restores the dashboard from that saved session, matching Kelo Social's current browser-side session pattern.
-- The password is submitted to the selected AT Protocol service; Kelo Hub does not save the password.
+The login form now redirects to the official AT Protocol OAuth authorization flow; Kelo Hub does not collect third-party passwords or one-time codes. The callback sets an HttpOnly cookie containing the active DID, and the server restores the OAuth session on dashboard load. OAuth requests currently use only the `atproto` scope for identity confirmation.
 
-**Security limitation:** this mirrors Kelo Social's current browser storage pattern, which keeps access and refresh JWTs in localStorage and is exposed to token theft if an XSS vulnerability occurs. Do not treat this as a hardened production session design. A future server-side HttpOnly session migration should be completed before handling high-risk accounts. The former OAuth routes remain in the repository but are no longer the login form's path.
+The settings screen stores user preferences in browser localStorage and displays the active OAuth identity. It does not yet provide organization roles, durable preferences, granular content scopes, or multi-account connection management. The dashboard does not yet synchronize or publish posts, messages, comments, or mentions.
+
+Before production use, replace the in-memory OAuth state/session maps with durable protected storage and test the full flow against multiple PDS implementations.
