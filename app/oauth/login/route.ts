@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // NodeOAuthClient resolves the handle/DID through AT Protocol discovery.
     // The user does not need to know or manually enter their PDS URL.
     const client = await getOAuthClient();
-    const authUrl = await client.authorize(handle, { scope: ATPROTO_SCOPE });
+    const authUrl = await client.authorize(handle, { scope: ATPROTO_SCOPE, prompt: "consent" });
     return NextResponse.json({ redirectUrl: authUrl.toString() });
   } catch {
     return NextResponse.json(
