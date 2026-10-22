@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       const convoId = typeof body.convoId === "string" ? body.convoId : "";
       const account = accounts.find(candidate => candidate.did === did);
       if (!account || !convoId) return NextResponse.json({ error: "Conversation ou compte invalide." }, { status: 400 });
-      const result = await account.agent.chat.bsky.convo.sendMessage({
+      await account.agent.chat.bsky.convo.sendMessage({
         convoId,
         message: { text },
       });
