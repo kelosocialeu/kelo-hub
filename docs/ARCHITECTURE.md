@@ -40,6 +40,14 @@ Every tenant-owned row must include an organization identifier. All reads and wr
 7. Verify webhook signatures and protect against replay.
 8. Do not simulate integrations or claim success without an end-to-end provider test.
 
+## AT Protocol sign-in (Alpha)
+
+- Uses the official `@atproto/oauth-client-node` SDK and the AT Protocol OAuth authorization-code flow.
+- The public client metadata is served at `/oauth-client-metadata.json`; the callback is `/oauth/callback`.
+- Only the `atproto` scope is requested for this first milestone. It confirms the account identity; it does not authorize reading posts, messages, or private account data.
+- The current Alpha stores OAuth state and sessions in process memory. A Render restart, redeploy, or instance change can invalidate the session or interrupt login. Before broader testing, replace these stores with durable, protected storage and add rate limiting and automated OAuth flow tests.
+- The UI must not describe an account as connected until the server restores a valid OAuth session.
+
 ## Credentials and one-time codes
 
 Kelo Hub must not collect third-party account passwords or OTP codes. For sign-in to connected services, redirect users to the provider. Password management, if ever considered, must be a separately reviewed feature and must not be implemented as a way to bypass provider authentication.
@@ -59,9 +67,10 @@ The app sets baseline headers in `next.config.ts`. Before production, review a s
 ## Milestones
 
 1. Bootstrap and responsive UI.
-2. Authentication and organization model.
-3. Tenant isolation and roles.
-4. OAuth connector framework.
-5. One provider integration selected based on official API access.
-6. Unified inbox and notifications.
-7. Security review, backup/restore test, and private pilot.
+2. AT Protocol OAuth sign-in for Alpha testing (in-memory session store; not production-ready).
+3. Authentication persistence and organization model.
+4. Tenant isolation and roles.
+5. OAuth connector framework and provider permission screens.
+6. One provider integration selected based on official API access.
+7. Unified inbox and notifications.
+8. Security review, backup/restore test, and private pilot.
