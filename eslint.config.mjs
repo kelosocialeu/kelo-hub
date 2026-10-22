@@ -10,5 +10,9 @@ export default [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
+    rules: {
+      // Keep natural French copy readable; punctuation in JSX text is intentional.
+      "react/no-unescaped-entities": "off",
+    },
   },
 ];
