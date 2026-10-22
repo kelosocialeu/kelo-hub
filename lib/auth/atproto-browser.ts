@@ -87,9 +87,10 @@ function isEmail(value: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value
 export async function loginAtproto(identifierInput: string, password: string, authFactorToken = ""): Promise<KeloHubAtpSession> {
   const identifier = normalizeIdentifier(identifierInput);
   if (!identifier || !password) throw new Error("Saisis ton identifiant et ton mot de passe.");
+  const discoveredPds = isEmail(identifier) ? null : await resolvePds(await resolveDid(identifier));
   const services = isEmail(identifier)
     ? Array.from(new Set([process.env.NEXT_PUBLIC_KELO_PDS_URL, "https://eurosky.social", BLUESKY_ENTRYWAY].filter(Boolean) as string[]))
-    : [loginServiceForPds(await resolvePds(await resolveDid(identifier)))];
+    : [loginServiceForPds(discoveredPds!)];
 
   let lastError: unknown;
   for (const service of services) {
@@ -97,7 +98,7 @@ export async function loginAtproto(identifierInput: string, password: string, au
       service,
       persistSession: (_event, session) => {
         if (session?.accessJwt && session.refreshJwt && session.handle && session.did) {
-          const pdsUrl = getStoredAtprotoSession()?.pdsUrl || service;
+          const pdsUrl = discoveredPds || getStoredAtprotoSession()?.pdsUrl || service;
           saveSession({ accessJwt: session.accessJwt, refreshJwt: session.refreshJwt, handle: session.handle, did: session.did, pdsUrl });
         }
       },
@@ -105,7 +106,7 @@ export async function loginAtproto(identifierInput: string, password: string, au
     try {
       await withTimeout(agent.login({ identifier, password, ...(authFactorToken.trim() ? { authFactorToken: authFactorToken.trim() } : {}) } as Parameters<typeof agent.login>[0]), "Le serveur PDS met trop de temps à répondre. Réessaie.");
       if (!agent.session) throw new Error("Le PDS n'a pas retourné de session.");
-      const pdsUrl = isEmail(identifier) ? await resolvePds(agent.session.did) : service;
+      const pdsUrl = discoveredPds || await resolvePds(agent.session.did);
       const session: KeloHubAtpSession = {
         accessJwt: agent.session.accessJwt,
         refreshJwt: agent.session.refreshJwt,
@@ -117,8 +118,10 @@ export async function loginAtproto(identifierInput: string, password: string, au
       return session;
     } catch (error) {
       lastError = error;
-      const message = String((error as { message?: string })?.message || "");
-      if (/AuthFactorTokenRequired|auth.?factor|verification code|login code/i.test(message)) {
+      const details = error as { message?: string; error?: string; response?: { data?: { error?: string } } };
+      const message = String(details?.message || "");
+      const errorCode = String(details?.error || details?.response?.data?.error || "");
+      if (/AuthFactorTokenRequired|auth.?factor|verification code|login code/i.test(message + " " + errorCode)) {
         throw new Error("Un code de connexion a été envoyé par e-mail. Saisis-le puis réessaie.");
       }
     }
