@@ -1,12 +1,11 @@
 "use client";
 
 import {
-  Activity, ArrowRight, ArrowUpRight, CheckCircle2, Eye, EyeOff, FileText,
+  Activity, ArrowRight, ArrowUpRight, CheckCircle2, FileText,
   Inbox, LayoutDashboard, Link2, LockKeyhole, LogOut, MessageCircle,
   RefreshCw, Settings2, ShieldCheck, Tag, Users, Workflow, Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getStoredAtprotoSession, loginAtproto, logoutAtproto } from "@/lib/auth/atproto-browser";
 
 type SessionState = { authenticated: boolean; did?: string };
 type PageMode = "home" | "login" | "dashboard";
@@ -39,9 +38,6 @@ export default function Home() {
   const [active, setActive] = useState("Vue d'ensemble");
   const [mode, setMode] = useState<PageMode>("home");
   const [atprotoHandle, setAtprotoHandle] = useState("");
-  const [atprotoPassword, setAtprotoPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [authFactorToken, setAuthFactorToken] = useState("");
   const [atprotoSession, setAtprotoSession] = useState<SessionState | null>(null);
   const [atprotoLoading, setAtprotoLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -51,34 +47,31 @@ export default function Home() {
   const [settings, setSettings] = useState({ language: "fr", compactMode: false, confirmActions: true, syncOnOpen: false });
   const [settingsSaved, setSettingsSaved] = useState(false);
 
-  function refreshSession() {
-    const session = getStoredAtprotoSession();
-    const next = session ? { authenticated: true, did: session.did } : { authenticated: false };
-    setAtprotoSession(next);
-    setLastChecked(new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }));
-    setSyncing(false);
-    if (next.authenticated) setMode("dashboard");
-    return next;
+  async function refreshSession() {
+    try {
+      const response = await fetch("/oauth/session", { cache: "no-store", credentials: "same-origin" });
+      const data = await response.json() as { authenticated?: boolean; did?: string };
+      const next = data.authenticated && data.did ? { authenticated: true, did: data.did } : { authenticated: false };
+      setAtprotoSession(next);
+      if (next.authenticated) setMode("dashboard");
+      setLastChecked(new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }));
+      return next;
+    } catch {
+      const next = { authenticated: false };
+      setAtprotoSession(next);
+      return next;
+    } finally {
+      setSyncing(false);
+    }
   }
 
   useEffect(() => {
-    const session = getStoredAtprotoSession();
-    setAtprotoSession(session ? { authenticated: true, did: session.did } : { authenticated: false });
-    setLastChecked(new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }));
+    void refreshSession();
     try {
       const saved = window.localStorage.getItem("kelo_hub_preferences");
       if (saved) setSettings(current => ({ ...current, ...JSON.parse(saved) }));
     } catch { /* Ignore invalid local preferences and keep safe defaults. */ }
   }, []);
-
-  function updateSetting<K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) {
-    setSettings(current => {
-      const next = { ...current, [key]: value };
-      try { window.localStorage.setItem("kelo_hub_preferences", JSON.stringify(next)); } catch { /* Preferences remain active for this session. */ }
-      return next;
-    });
-    setSettingsSaved(true);
-  }
 
   async function handleAtprotoLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -86,25 +79,24 @@ export default function Home() {
     setAtprotoError("");
     setAtprotoMessage("");
     try {
-      const session = await loginAtproto(atprotoHandle, atprotoPassword, authFactorToken);
-      setAtprotoSession({ authenticated: true, did: session.did });
-      setAtprotoPassword("");
-      setAuthFactorToken("");
-      setMode("dashboard");
-      setAtprotoMessage("Connexion AT Protocol réussie.");
-      setLastChecked(new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }));
+      const response = await fetch("/oauth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ handle: atprotoHandle.trim() }),
+      });
+      const data = await response.json() as { redirectUrl?: string; error?: string };
+      if (!response.ok || !data.redirectUrl) throw new Error(data.error || "Impossible de démarrer l’autorisation AT Protocol.");
+      window.location.assign(data.redirectUrl);
     } catch (error) {
       setAtprotoError(error instanceof Error ? error.message : "La connexion a échoué.");
-    } finally {
       setAtprotoLoading(false);
     }
   }
 
-  function handleLogout() {
-    logoutAtproto();
+  async function handleLogout() {
+    try { await fetch("/oauth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* The local UI still exits. */ }
     setAtprotoSession({ authenticated: false });
-    setAtprotoPassword("");
-    setAuthFactorToken("");
     setMode("home");
     setActive("Vue d'ensemble");
     setAtprotoMessage("");
@@ -153,19 +145,17 @@ export default function Home() {
           <div className="auth-eyebrow"><span className="eyebrow-dot" /> ESPACE PRIVÉ</div>
           <h1>Ravi de vous retrouver.</h1>
           <p className="auth-description">Connectez-vous avec votre identité AT Protocol pour accéder à votre espace Kelo Hub.</p>
-          <div className="auth-security"><LockKeyhole size={17}/><span>Authentification auprès du service AT Protocol associé à votre identité. Votre mot de passe n'est pas enregistré par Kelo Hub.</span></div>
+          <div className="auth-security"><LockKeyhole size={17}/><span>Kelo Hub utilise OAuth AT Protocol : votre mot de passe reste sur le service qui authentifie votre compte.</span></div>
           <form className="atproto-login-form" onSubmit={handleAtprotoLogin}>
-            <label htmlFor="atproto-handle">Adresse e-mail, handle ou DID</label>
-            <input className="login-field" id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="nom@domaine.be ou handle.bsky.social" autoComplete="username" required maxLength={253} disabled={atprotoLoading}/>
-            <div className="password-label-row"><label htmlFor="atproto-password">Mot de passe</label><span><LockKeyhole size={12}/> Connexion sécurisée</span></div>
-            <div className="password-input-wrap"><input className="login-field password-field" id="atproto-password" type={showPassword ? "text" : "password"} value={atprotoPassword} onChange={event => setAtprotoPassword(event.target.value)} placeholder="Saisissez votre mot de passe" autoComplete="current-password" required disabled={atprotoLoading}/><button className="password-toggle" type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div>
-            {atprotoError.includes("code de connexion") && <div className="auth-factor-wrap"><label htmlFor="auth-factor-token">Code de connexion reçu par e-mail</label><input className="login-field" id="auth-factor-token" value={authFactorToken} onChange={event => setAuthFactorToken(event.target.value)} placeholder="Code à usage unique" autoComplete="one-time-code" inputMode="numeric" disabled={atprotoLoading}/></div>}
-            <button className="primary-button login-submit" type="submit" disabled={atprotoLoading || !atprotoHandle.trim() || !atprotoPassword}>{atprotoLoading ? <><RefreshCw className="spin-icon" size={16}/> Connexion en cours…</> : <>Se connecter <ArrowRight size={17}/></>}</button>
-            <p className="atproto-privacy">Vos identifiants sont utilisés pour l'authentification auprès du service AT Protocol découvert. Ils ne sont pas enregistrés par Kelo Hub.</p>
+            <label htmlFor="atproto-handle">Handle ou DID AT Protocol</label>
+            <input className="login-field" id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="nom.bsky.social ou did:plc:…" autoComplete="username" required maxLength={253} disabled={atprotoLoading}/>
+            <div className="auth-security oauth-consent-info"><ShieldCheck size={17}/><span>Vous serez redirigé vers le service d’autorisation de votre compte. Vous pourrez vous connecter là-bas et examiner les autorisations avant de les accepter. Kelo Hub ne vous demande pas votre mot de passe.</span></div>
+            <button className="primary-button login-submit" type="submit" disabled={atprotoLoading || !atprotoHandle.trim()}>{atprotoLoading ? <><RefreshCw className="spin-icon" size={16}/> Redirection…</> : <>Continuer vers AT Protocol <ArrowRight size={17}/></>}</button>
+            <p className="atproto-privacy">Connexion via OAuth AT Protocol avec échange de jetons côté serveur et cookie de session HttpOnly. Les autorisations demandées sont limitées à l’identité de base pour le moment.</p>
           </form>
           {atprotoError && <p className="atproto-feedback error" role="alert">{atprotoError}</p>}
           {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
-          <p className="auth-footer"><ShieldCheck size={14}/> Kelo Hub · Connexion par identité AT Protocol</p>
+          <p className="auth-footer"><ShieldCheck size={14}/> Kelo Hub · Autorisation OAuth AT Protocol</p>
         </section>
       </main>
     );
@@ -176,9 +166,9 @@ export default function Home() {
 
   function handleSync() {
     setSyncing(true);
-    window.setTimeout(() => {
-      const session = refreshSession();
-      if (session.authenticated) setAtprotoMessage("Session vérifiée. La synchronisation des données de contenu n'est pas encore disponible.");
+    window.setTimeout(async () => {
+      const session = await refreshSession();
+      if (session.authenticated) setAtprotoMessage("Session OAuth vérifiée. La synchronisation des données de contenu n'est pas encore disponible.");
     }, 150);
   }
 
@@ -211,7 +201,7 @@ export default function Home() {
               </section>
               <section className="panel settings-panel">
                 <div className="panel-heading"><div><h2>Compte AT Protocol connecté</h2><p>Identité actuellement utilisée par Kelo Hub.</p></div><Link2 size={19}/></div>
-                <div className="settings-account"><div className="settings-account-icon"><ShieldCheck size={21}/></div><div><strong>{atprotoSession.did || "Identité AT Protocol"}</strong><span>{getStoredAtprotoSession()?.handle || "Handle indisponible"}</span><small>Session enregistrée dans ce navigateur</small></div><span className="connection-status"><i/> Active</span></div>
+                <div className="settings-account"><div className="settings-account-icon"><ShieldCheck size={21}/></div><div><strong>{atprotoSession.did || "Identité AT Protocol"}</strong><span>"Session OAuth active"</span><small>Session enregistrée dans ce navigateur</small></div><span className="connection-status"><i/> Active</span></div>
                 <div className="settings-note"><ShieldCheck size={17}/><p><strong>À propos des autorisations</strong><span>La connexion actuelle utilise une session AT Protocol classique. Elle ne propose pas encore une autorisation OAuth granulaire par permission. Les contrôles d’accès fins, la connexion de plusieurs comptes et la révocation côté serveur nécessitent encore l’intégration OAuth et un stockage serveur sécurisé.</span></p></div>
                 <div className="settings-permissions"><div><CheckCircle2 size={15}/><span>Identité du compte et DID</span><small>Session actuelle</small></div><div><LockKeyhole size={15}/><span>Accès aux fonctions AT Protocol</span><small>Selon les droits du compte connecté</small></div><div><ShieldCheck size={15}/><span>Déconnexion locale</span><small>Supprime la session de ce navigateur</small></div></div>
                 <button className="settings-danger-button" onClick={handleLogout}><LogOut size={15}/> Déconnecter ce compte</button>
