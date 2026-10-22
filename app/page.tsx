@@ -1,13 +1,14 @@
 "use client";
 
 import {
-  Activity, ArrowRight, ArrowUpRight, CheckCircle2, FileText,
+  Activity, ArrowRight, ArrowUpRight, Bell, CheckCircle2, FileText,
   Inbox, LayoutDashboard, Link2, LockKeyhole, LogOut, MessageCircle,
   RefreshCw, Settings2, ShieldCheck, Tag, Users, Workflow, Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AtprotoAccountManager from "./atproto-account-manager";
+import WorkspacePanel from "./workspace-panel";
 
 type SessionState = { authenticated: boolean; did?: string };
 type PageMode = "home" | "login" | "dashboard";
@@ -17,6 +18,7 @@ const navigation = [
   { label: "Comptes AT Protocol", icon: Link2 },
   { label: "Publications", icon: Workflow },
   { label: "Boîte de réception", icon: Inbox },
+  { label: "Notifications", icon: Bell },
   { label: "Commentaires", icon: MessageCircle },
   { label: "Mentions et tags", icon: Tag },
   { label: "Membres et accès", icon: Users },
@@ -25,15 +27,16 @@ const navigation = [
 ];
 
 const pages: Record<string, { eyebrow: string; title: string; description: string; icon: typeof Link2; emptyTitle: string; emptyDescription: string }> = {
-  "Vue d'ensemble": { eyebrow: "VOTRE ESPACE", title: "Tout au même endroit.", description: "Un aperçu clair de l'état de votre espace Kelo Hub.", icon: LayoutDashboard, emptyTitle: "Votre espace est prêt", emptyDescription: "Aucune donnée n'est encore disponible. Connectez vos sources réelles pour commencer à synchroniser votre activité." },
+  "Vue d'ensemble": { eyebrow: "VOTRE ESPACE", title: "Tout au même endroit.", description: "Aperçu rapide de votre espace.", icon: LayoutDashboard, emptyTitle: "Votre espace est prêt", emptyDescription: "Aucune donnée n'est encore disponible. Connectez vos sources réelles pour commencer à synchroniser votre activité." },
   "Comptes AT Protocol": { eyebrow: "CONNEXIONS", title: "Comptes AT Protocol", description: "Retrouvez les comptes que vous aurez autorisés à Kelo Hub.", icon: Link2, emptyTitle: "Aucun compte supplémentaire", emptyDescription: "Liez plusieurs identités AT Protocol via le consentement OAuth de chaque compte." },
-  "Publications": { eyebrow: "CONTENU", title: "Publications", description: "Suivez vos publications lorsque la synchronisation AT Protocol sera disponible.", icon: Workflow, emptyTitle: "Aucune publication synchronisée", emptyDescription: "Aucune donnée fictive n'est affichée. La récupération et la publication réelles restent à connecter." },
-  "Boîte de réception": { eyebrow: "COMMUNAUTÉ", title: "Boîte de réception", description: "Les messages apparaîtront ici après connexion de la source correspondante.", icon: Inbox, emptyTitle: "Boîte de réception vide", emptyDescription: "La synchronisation réelle des messages n'est pas encore implémentée." },
-  "Commentaires": { eyebrow: "COMMUNAUTÉ", title: "Commentaires", description: "Centralisez les commentaires des comptes autorisés.", icon: MessageCircle, emptyTitle: "Aucun commentaire synchronisé", emptyDescription: "Les commentaires seront affichés ici une fois la connexion aux API réalisée." },
-  "Mentions et tags": { eyebrow: "COMMUNAUTÉ", title: "Mentions et tags", description: "Retrouvez les mentions liées à vos comptes connectés.", icon: Tag, emptyTitle: "Aucune mention synchronisée", emptyDescription: "La récupération réelle des mentions reste à développer." },
-  "Membres et accès": { eyebrow: "ORGANISATION", title: "Membres et accès", description: "La gestion des membres sera disponible après configuration des organisations et des rôles.", icon: Users, emptyTitle: "Gestion des accès à configurer", emptyDescription: "Aucun membre fictif n'est affiché. Les invitations et autorisations doivent être implémentées côté serveur." },
-  "Journal d'activité": { eyebrow: "SÉCURITÉ", title: "Journal d'activité", description: "Consultez les événements enregistrés par les services connectés.", icon: FileText, emptyTitle: "Aucun événement enregistré", emptyDescription: "Le journal d'audit persistant n'est pas encore configuré." },
-  "Paramètres": { eyebrow: "CONFIGURATION", title: "Paramètres", description: "Configurez votre espace lorsque les paramètres persistants seront disponibles.", icon: Settings2, emptyTitle: "Aucun paramètre configuré", emptyDescription: "Aucune valeur fictive n'est préremplie." }
+  "Publications": { eyebrow: "CONTENU", title: "Publications", description: "Rédige et publie sur les comptes connectés.", icon: Workflow, emptyTitle: "Aucune publication synchronisée", emptyDescription: "Aucune donnée fictive n'est affichée. La récupération et la publication réelles restent à connecter." },
+  "Boîte de réception": { eyebrow: "COMMUNAUTÉ", title: "Boîte de réception", description: "Consulte et réponds aux conversations disponibles.", icon: Inbox, emptyTitle: "Boîte de réception vide", emptyDescription: "La synchronisation réelle des messages n'est pas encore implémentée." },
+  "Notifications": { eyebrow: "ACTIVITÉ", title: "Notifications", description: "Synchronise les notifications des comptes connectés.", icon: Bell, emptyTitle: "Aucune notification disponible", emptyDescription: "Aucune notification n’a été récupérée." },
+  "Commentaires": { eyebrow: "COMMUNAUTÉ", title: "Commentaires", description: "Réponses et citations reçues.", icon: MessageCircle, emptyTitle: "Aucun commentaire synchronisé", emptyDescription: "Aucune réponse ou citation n’a été récupérée." },
+  "Mentions et tags": { eyebrow: "COMMUNAUTÉ", title: "Mentions et tags", description: "Mentions reçues sur les comptes connectés.", icon: Tag, emptyTitle: "Aucune mention synchronisée", emptyDescription: "La récupération réelle des mentions reste à développer." },
+  "Membres et accès": { eyebrow: "ORGANISATION", title: "Membres et accès", description: "Gérez les accès à votre espace.", icon: Users, emptyTitle: "Gestion des accès à configurer", emptyDescription: "Aucun membre fictif n'est affiché. Les invitations et autorisations doivent être implémentées côté serveur." },
+  "Journal d'activité": { eyebrow: "SÉCURITÉ", title: "Journal d'activité", description: "Événements de sécurité et d’administration.", icon: FileText, emptyTitle: "Aucun événement enregistré", emptyDescription: "Le journal d'audit persistant n'est pas encore configuré." },
+  "Paramètres": { eyebrow: "CONFIGURATION", title: "Paramètres", description: "Préférences de votre espace.", icon: Settings2, emptyTitle: "Aucun paramètre configuré", emptyDescription: "Aucune valeur fictive n'est préremplie." }
 };
 
 export default function Home() {
@@ -218,7 +221,7 @@ export default function Home() {
         <header className="topbar"><div className="breadcrumbs"><span>Mon organisation</span><span className="crumb-slash">/</span><strong>{active}</strong></div><div className="topbar-actions"><span className="sync-state"><i/> Session active</span><button className="sync-button" onClick={handleSync} disabled={syncing} title="Vérifier la session"><RefreshCw size={15} className={syncing ? "spin-icon" : ""}/><span>{syncing ? "Vérification…" : "Vérifier la session"}</span></button><div className="top-avatar"><ShieldCheck size={15}/></div></div></header>
         <div className="page-content dashboard-content">
           <div className="dashboard-welcome"><div><div className="eyebrow"><span className="eyebrow-dot"/> {page.eyebrow}</div><h1>{page.title}</h1><p>{page.description}</p></div><div className="last-sync"><span>Dernière vérification de session</span><strong>{lastChecked ? "Aujourd'hui, " + lastChecked : "Pas encore vérifiée"}</strong></div></div>
-          <div className="connection-overview"><div className="connection-overview-icon"><ShieldCheck size={21}/></div><div className="connection-overview-copy"><strong>Identité AT Protocol connectée</strong><span title={atprotoSession.did}>{atprotoSession.did || "Identité confirmée par la session locale"}</span><small>Cette vérification concerne la session, pas la synchronisation des publications ou des messages.</small></div><span className="connection-status"><i/> Connectée</span></div>
+
           {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
           {active === "Comptes AT Protocol" ? (
             <AtprotoAccountManager primaryDid={atprotoSession.did ?? ""} />
@@ -241,10 +244,12 @@ export default function Home() {
               </section>
               <section className="settings-security-banner"><LockKeyhole size={19}/><div><strong>Protection de votre compte</strong><p>N’utilisez pas le mot de passe principal d’un compte si votre service propose un mot de passe d’application. Kelo Hub ne doit pas être considéré comme un système OAuth à permissions fines tant que cette intégration n’est pas terminée.</p></div></section>
             </div>
+          ) : active === "Publications" || active === "Boîte de réception" || active === "Notifications" || active === "Commentaires" || active === "Mentions et tags" ? (
+            <WorkspacePanel section={active} />
           ) : (
             <>
               <section className="panel dashboard-empty-panel"><div className="panel-heading"><div><h2>{active === "Vue d'ensemble" ? "État de votre espace" : page.title}</h2><p>Les données ne sont affichées que lorsqu'elles sont disponibles depuis une source réelle.</p></div><span className="data-source-label"><span/> Données réelles uniquement</span></div><div className="empty-state compact"><div className="empty-illustration"><PageIcon size={24}/></div><strong>{page.emptyTitle}</strong><p>{page.emptyDescription}</p></div></section>
-              <div className="sync-explainer"><RefreshCw size={16}/><p><strong>À propos de la synchronisation</strong><span>La vérification ci-dessus relit la session AT Protocol enregistrée sur cet appareil. La liaison OAuth de comptes supplémentaires est disponible ; la synchronisation des publications, messages, commentaires et mentions reste à développer.</span></p></div>
+              
             </>
           )}
           <footer className="page-footer"><span>© 2026 Kelo Hub</span><span><ShieldCheck size={14}/> Aucun contenu de démonstration</span></footer>
