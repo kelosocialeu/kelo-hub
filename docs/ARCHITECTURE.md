@@ -40,13 +40,13 @@ Every tenant-owned row must include an organization identifier. All reads and wr
 7. Verify webhook signatures and protect against replay.
 8. Do not simulate integrations or claim success without an end-to-end provider test.
 
-## AT Protocol sign-in (Alpha)
+## AT Protocol sign-in
 
 - Uses the official `@atproto/oauth-client-node` SDK and the AT Protocol OAuth authorization-code flow.
 - The client metadata is served at `/oauth-client-metadata.json`; the callback is `/oauth/callback`; the public signing key set is served at `/.well-known/jwks.json`.
 - Production uses the confidential-client profile with ES256 signing. Generate a private JWK with `npm run gen-key` and set it as the Render secret `ATPROTO_OAUTH_PRIVATE_KEY`. Never commit the value.
 - Only the `atproto` scope is requested for this first milestone. It confirms the account identity; it does not authorize reading posts, messages, or private account data.
-- The current Alpha stores OAuth state and sessions in process memory. A Render restart, redeploy, or instance change can invalidate the session or interrupt login. Before broader testing, replace these stores with durable, protected storage and add rate limiting and automated OAuth flow tests.
+- The current prototype stores OAuth state and sessions in process memory. A Render restart, redeploy, or instance change can invalidate the session or interrupt login. Before broader testing, replace these stores with durable, protected storage and add rate limiting and automated OAuth flow tests.
 - The UI must not describe an account as connected until the server restores a valid OAuth session.
 
 ## Credentials and one-time codes
@@ -63,13 +63,13 @@ The app sets baseline headers in `next.config.ts`. Before production, review a s
 - Start command: `npm start`.
 - Runtime: Node.js 22.
 - Do not add credentials to GitHub. Store production values in Render environment settings.
-- For deployed AT Protocol OAuth, set `APP_BASE_URL=https://kelo-hub-alpha.onrender.com` and `ATPROTO_OAUTH_PRIVATE_KEY` in Render. The app refuses to initialize the production OAuth client if the private signing key is missing.
+- For deployed AT Protocol OAuth, set `APP_BASE_URL` to the exact public URL configured for this Kelo Hub Render service and `ATPROTO_OAUTH_PRIVATE_KEY` in Render. The app refuses to initialize the production OAuth client if the private signing key is missing.
 - The current dashboard is only a static/client-side prototype; no authentication or persistence is implemented yet.
 
 ## Milestones
 
 1. Bootstrap and responsive UI.
-2. AT Protocol OAuth sign-in for Alpha testing (in-memory session store; not production-ready).
+2. AT Protocol OAuth sign-in for controlled testing (in-memory session store; not production-ready).
 3. Authentication persistence and organization model.
 4. Tenant isolation and roles.
 5. OAuth connector framework and provider permission screens.
