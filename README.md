@@ -4,7 +4,7 @@ Kelo Hub is a private prototype for centralizing an organization's approved busi
 
 ## Status
 
-**Early prototype — not production-ready.** Authentication, database persistence, OAuth integrations, token encryption, tenant isolation tests, and audit logging must be implemented before real accounts or sensitive data are connected.
+**Early prototype — not production-ready.** Database persistence, server-side session hardening, organization authorization, tenant isolation tests, and audit logging are still required before handling sensitive production data. AT Protocol sign-in currently follows Kelo Social's direct PDS login pattern and stores session tokens in browser localStorage.
 
 ## Stack
 
@@ -24,7 +24,7 @@ Kelo Hub is a private prototype for centralizing an organization's approved busi
 
 ## Initial roadmap
 
-1. Organization-aware authentication and membership.
+1. Organization-aware authentication and membership (the current sign-in only verifies an AT Protocol account).
 2. Organization, subsidiary, team, and role management.
 3. Database schema and strict tenant isolation.
 4. OAuth connection framework for approved providers.
