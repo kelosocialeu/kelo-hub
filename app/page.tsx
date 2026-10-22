@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AtprotoAccountManager from "./atproto-account-manager";
 
 type SessionState = { authenticated: boolean; did?: string };
 type PageMode = "home" | "login" | "dashboard";
@@ -25,7 +26,7 @@ const navigation = [
 
 const pages: Record<string, { eyebrow: string; title: string; description: string; icon: typeof Link2; emptyTitle: string; emptyDescription: string }> = {
   "Vue d'ensemble": { eyebrow: "VOTRE ESPACE", title: "Tout au même endroit.", description: "Un aperçu clair de l'état de votre espace Kelo Hub.", icon: LayoutDashboard, emptyTitle: "Votre espace est prêt", emptyDescription: "Aucune donnée n'est encore disponible. Connectez vos sources réelles pour commencer à synchroniser votre activité." },
-  "Comptes AT Protocol": { eyebrow: "CONNEXIONS", title: "Comptes AT Protocol", description: "Retrouvez les comptes que vous aurez autorisés à Kelo Hub.", icon: Link2, emptyTitle: "Aucun compte supplémentaire", emptyDescription: "Votre connexion actuelle identifie uniquement votre session. La liaison sécurisée d'autres comptes reste à implémenter." },
+  "Comptes AT Protocol": { eyebrow: "CONNEXIONS", title: "Comptes AT Protocol", description: "Retrouvez les comptes que vous aurez autorisés à Kelo Hub.", icon: Link2, emptyTitle: "Aucun compte supplémentaire", emptyDescription: "Liez plusieurs identités AT Protocol via le consentement OAuth de chaque compte." },
   "Publications": { eyebrow: "CONTENU", title: "Publications", description: "Suivez vos publications lorsque la synchronisation AT Protocol sera disponible.", icon: Workflow, emptyTitle: "Aucune publication synchronisée", emptyDescription: "Aucune donnée fictive n'est affichée. La récupération et la publication réelles restent à connecter." },
   "Boîte de réception": { eyebrow: "COMMUNAUTÉ", title: "Boîte de réception", description: "Les messages apparaîtront ici après connexion de la source correspondante.", icon: Inbox, emptyTitle: "Boîte de réception vide", emptyDescription: "La synchronisation réelle des messages n'est pas encore implémentée." },
   "Commentaires": { eyebrow: "COMMUNAUTÉ", title: "Commentaires", description: "Centralisez les commentaires des comptes autorisés.", icon: MessageCircle, emptyTitle: "Aucun commentaire synchronisé", emptyDescription: "Les commentaires seront affichés ici une fois la connexion aux API réalisée." },
@@ -83,6 +84,18 @@ export default function Home() {
     if (query.get("atproto") === "login_failed") {
       setMode("login");
       setAtprotoError("L’autorisation AT Protocol n’a pas abouti. Réessaie et vérifie que tu acceptes la demande d’accès.");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (query.get("atproto") === "account_linked") {
+      setActive("Comptes AT Protocol");
+      setAtprotoMessage("Le compte AT Protocol a été autorisé et ajouté à la liste des comptes liés.");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (query.get("atproto") === "link_failed") {
+      setActive("Comptes AT Protocol");
+      setAtprotoMessage("La liaison a échoué. Vérifie que ta session principale est toujours active, puis réessaie.");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (query.get("atproto") === "link_limit") {
+      setActive("Comptes AT Protocol");
+      setAtprotoMessage("La limite actuelle de comptes liés est atteinte. Aucun compte supplémentaire n’a été ajouté.");
       window.history.replaceState({}, "", window.location.pathname);
     }
     try {
@@ -207,7 +220,9 @@ export default function Home() {
           <div className="dashboard-welcome"><div><div className="eyebrow"><span className="eyebrow-dot"/> {page.eyebrow}</div><h1>{page.title}</h1><p>{page.description}</p></div><div className="last-sync"><span>Dernière vérification de session</span><strong>{lastChecked ? "Aujourd'hui, " + lastChecked : "Pas encore vérifiée"}</strong></div></div>
           <div className="connection-overview"><div className="connection-overview-icon"><ShieldCheck size={21}/></div><div className="connection-overview-copy"><strong>Identité AT Protocol connectée</strong><span title={atprotoSession.did}>{atprotoSession.did || "Identité confirmée par la session locale"}</span><small>Cette vérification concerne la session, pas la synchronisation des publications ou des messages.</small></div><span className="connection-status"><i/> Connectée</span></div>
           {atprotoMessage && <p className="atproto-feedback" role="status">{atprotoMessage}</p>}
-          {active === "Paramètres" ? (
+          {active === "Comptes AT Protocol" ? (
+            <AtprotoAccountManager primaryDid={atprotoSession.did ?? ""} />
+          ) : active === "Paramètres" ? (
             <div className="settings-layout">
               <section className="panel settings-panel">
                 <div className="panel-heading"><div><h2>Préférences de l’espace</h2><p>Ces préférences sont enregistrées dans ce navigateur.</p></div><Settings2 size={19}/></div>
