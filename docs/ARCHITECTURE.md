@@ -104,13 +104,13 @@ Recommended approach:
 
 ## UI prototype status (2026-10-22)
 
-The dashboard includes an authentication gate, post-target selection UI, a draft list, and separate message/comment/mention workspaces. The AT Protocol account page now supports real additional-account OAuth consent and lists sessions that the server can restore. The signed account DID list is held in an HttpOnly cookie (currently limited to 25 accounts); OAuth state and session objects remain in process memory, so a Render restart may invalidate sessions. Inbox and publishing controls remain design scaffolding and do not send content.
+The dashboard includes additional-account OAuth linking, a publication composer targeting selected connected accounts, a Bluesky notifications view, and a chat inbox where the provider exposes the chat API. Publishing uses the AT Protocol repository record API; notifications and conversations are fetched from the connected accounts and errors are shown when an API is unavailable. The signed account DID list is held in an HttpOnly cookie (currently limited to 25 accounts); OAuth state and session objects remain in process memory, so a Render restart may invalidate sessions.
 
 
 ## Current UI and OAuth milestone (2026-10-22)
 
 The login form now redirects to the official AT Protocol OAuth authorization flow; Kelo Hub does not collect third-party passwords or one-time codes. The callback sets an HttpOnly cookie containing the active DID, and the server restores the OAuth session on dashboard load. OAuth requests currently use only the `atproto` scope for identity confirmation.
 
-The settings screen stores user preferences in browser localStorage and displays the active OAuth identity. The “Comptes AT Protocol” admin section supports linking additional identities through their own OAuth consent and validates that the server can restore each linked session. It does not yet provide organization roles, durable database-backed account metadata, granular content scopes, or content synchronization. The dashboard does not yet synchronize or publish posts, messages, comments, or mentions.
+The settings screen stores user preferences in browser localStorage and displays the active OAuth identity. The “Comptes AT Protocol” admin section supports linking additional identities through their own OAuth consent and validates that the server can restore each linked session. “Publications” can create Bluesky post records on selected restored accounts; “Notifications” fetches notifications and can mark them as seen; “Boîte de réception” lists chat conversations and sends replies when the connected provider supports those APIs. Comments and mentions are currently filtered from the available notification feed, not a separate full synchronization pipeline. Organization roles, durable database-backed account metadata, durable OAuth session storage, scheduled background sync, and audit logs remain unimplemented.
 
 Before production use, replace the in-memory OAuth state/session maps with durable protected storage and test the full flow against multiple PDS implementations.
