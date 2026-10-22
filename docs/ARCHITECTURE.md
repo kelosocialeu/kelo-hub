@@ -76,3 +76,32 @@ The app sets baseline headers in `next.config.ts`. Before production, review a s
 6. One provider integration selected based on official API access.
 7. Unified inbox and notifications.
 8. Security review, backup/restore test, and private pilot.
+
+
+## Organization login and multiple AT Protocol accounts
+
+The intended user flow is:
+1. A person signs in using the AT Protocol identity of their organization/entity.
+2. The server resolves that identity to an organization membership and role.
+3. Only an authorized member is shown that organization's private admin workspace.
+4. From that workspace, an authorized administrator can connect multiple AT Protocol accounts one by one through each account's own OAuth authorization.
+5. Each connected account has its own DID, granted scopes, token/session state, connection status, and disconnect/revoke action. The post composer can target any subset of authorized accounts, e.g. accounts 1, 2 and 4 while excluding account 3.
+
+Important: AT Protocol OAuth sign-in currently establishes a single identity only. It does **not** yet prove that the DID owns a company or that the person is authorized to administer an organization. Organization onboarding, membership verification, authorization checks, and multi-account OAuth storage must be implemented before treating this as a secure multi-tenant admin product. The current account selector and inbox/posting screens are UI prototypes with fictional data; reply and post buttons do not send network requests.
+
+## Credential storage decision
+
+Do not store OAuth access tokens, refresh tokens, private signing keys, or session credentials in AT Protocol records. AT Protocol is the identity/content network, not Kelo Hub's private credential vault; writing secrets to user-visible records would be unsafe and the protocol does not provide Kelo Hub with a private application-owned secret store.
+
+Recommended approach:
+- Use PostgreSQL for organization memberships, connected-account metadata, post drafts, scheduled jobs, inbox references, and audit events. Supabase Postgres is a reasonable Alpha choice if its current pricing and region suit the project.
+- Store OAuth credentials server-side only. Encrypt sensitive credential payloads before database persistence using authenticated encryption (for example AES-256-GCM) with the encryption key held only in Render environment secrets or a managed KMS—not in the same database row or repository.
+- Use Supabase Row Level Security as defense in depth, but never rely on RLS alone: server routes must validate the authenticated session, organization membership, role, account ownership, and requested scopes for every operation. Keep the service-role key server-only.
+- Prefer durable database-backed OAuth state/session storage with expiry and one-time state consumption. Add CSRF protection, rate limiting, audit logs, backup/restore testing, and revocation/disconnect handling.
+- Never log tokens or return them to client-side JavaScript. Never ask for third-party account passwords or one-time codes; each account must authorize via its own official OAuth flow.
+- For publishing, require the provider's actual write scope and confirm the AT Protocol API supports the requested operation. For DMs, replies, and mention processing, confirm the specific API and scope are available before promising full support; not all services expose every inbox feature through a standard public API.
+- Store content and interaction data only to the extent needed, with a clear retention policy and user-initiated deletion/disconnect.
+
+## UI prototype status (2026-10-22)
+
+The dashboard now includes an authentication gate, an account-list prototype, multi-account post-target selection, a draft list, and separate message/comment/mention reply workspaces. Account additions and inbox items are fictional demo data held only in page state. They reset on refresh and do not connect or publish to AT Protocol. These views are design scaffolding only until the durable database schema, tenant authorization, and OAuth flows are implemented and tested end to end.
