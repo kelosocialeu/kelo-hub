@@ -173,7 +173,7 @@ export default function Home() {
   }
 
   return (
-    <main className="app-shell dashboard-shell">
+    <main className={settings.compactMode ? "app-shell dashboard-shell compact-mode" : "app-shell dashboard-shell"}>
       <aside className="sidebar">
         <a className="brand" href="/" onClick={event => { event.preventDefault(); setMode("home"); }} aria-label="Kelo Hub accueil"><span className="brand-mark">K</span><span><strong>Kelo Hub</strong><small>ORGANISATION OS</small></span></a>
         <div className="workspace-switch"><div className="workspace-avatar">K</div><div className="workspace-label"><strong>Mon organisation</strong><span title={atprotoSession.did}>{atprotoSession.did || "Identité AT Protocol"}</span></div></div>
@@ -193,10 +193,10 @@ export default function Home() {
             <div className="settings-layout">
               <section className="panel settings-panel">
                 <div className="panel-heading"><div><h2>Préférences de l’espace</h2><p>Ces préférences sont enregistrées dans ce navigateur.</p></div><Settings2 size={19}/></div>
-                <div className="settings-row"><div><strong>Langue de l’interface</strong><p>Langue d’affichage des menus Kelo Hub.</p></div><select value={settings.language} onChange={event => updateSetting("language", event.target.value)} aria-label="Langue de l’interface"><option value="fr">Français</option><option value="en">English</option><option value="nl">Nederlands</option></select></div>
+                <div className="settings-row"><div><strong>Langue de l’interface</strong><p>Préférence enregistrée ici ; la traduction complète de l’interface n’est pas encore activée.</p></div><select value={settings.language} onChange={event => updateSetting("language", event.target.value)} aria-label="Langue de l’interface"><option value="fr">Français</option><option value="en">English</option><option value="nl">Nederlands</option></select></div>
                 <div className="settings-row"><div><strong>Interface compacte</strong><p>Réduire les espacements pour afficher plus d’informations.</p></div><button className={settings.compactMode ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.compactMode} onClick={() => updateSetting("compactMode", !settings.compactMode)}><span/></button></div>
-                <div className="settings-row"><div><strong>Confirmer les actions sensibles</strong><p>Préférence pour les futures actions de publication et de gestion.</p></div><button className={settings.confirmActions ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.confirmActions} onClick={() => updateSetting("confirmActions", !settings.confirmActions)}><span/></button></div>
-                <div className="settings-row"><div><strong>Vérifier la session à l’ouverture</strong><p>Préférence enregistrée, sans synchronisation de contenu automatique pour le moment.</p></div><button className={settings.syncOnOpen ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.syncOnOpen} onClick={() => updateSetting("syncOnOpen", !settings.syncOnOpen)}><span/></button></div>
+                <div className="settings-row"><div><strong>Confirmer les actions sensibles</strong><p>Préférence enregistrée ; les actions sensibles ne sont pas encore implémentées.</p></div><button className={settings.confirmActions ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.confirmActions} onClick={() => updateSetting("confirmActions", !settings.confirmActions)}><span/></button></div>
+                <div className="settings-row"><div><strong>Vérifier la session à l’ouverture</strong><p>La session est vérifiée à l’ouverture ; la synchronisation des contenus reste désactivée.</p></div><button className={settings.syncOnOpen ? "settings-toggle on" : "settings-toggle"} role="switch" aria-checked={settings.syncOnOpen} onClick={() => updateSetting("syncOnOpen", !settings.syncOnOpen)}><span/></button></div>
                 {settingsSaved && <p className="settings-saved" role="status"><CheckCircle2 size={15}/> Préférences enregistrées sur cet appareil.</p>}
               </section>
               <section className="panel settings-panel">
