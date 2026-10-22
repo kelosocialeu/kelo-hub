@@ -135,7 +135,7 @@ export default function Home() {
         <div className="auth-eyebrow"><span className="eyebrow-dot" /> ESPACE ADMINISTRATEUR</div>
         <h1>Votre organisation.<br />Vos comptes. Un seul espace.</h1>
         <p className="auth-description">Connectez-vous avec l'identité AT Protocol de votre entreprise pour accéder à son espace d'administration.</p>
-        <div className="auth-security"><LockKeyhole size={17} /><span>Connexion sécurisée via le service officiel de votre compte. Votre mot de passe n'est jamais demandé par Kelo Hub.</span></div>
+        <div className="auth-security"><LockKeyhole size={17} /><span>Authentification auprès du PDS AT Protocol de votre compte. Le mot de passe est transmis au service découvert et n'est pas conservé par Kelo Hub.</span></div>
         <form className="atproto-login-form" onSubmit={handleAtprotoLogin}>
           <label htmlFor="atproto-handle">Adresse e-mail, handle ou DID</label>
           <div className="auth-input-row"><input id="atproto-handle" value={atprotoHandle} onChange={event => setAtprotoHandle(event.target.value)} placeholder="ex. nom@domaine.be ou entreprise.bsky.social" autoComplete="username" required maxLength={253} disabled={atprotoLoading} /></div>
