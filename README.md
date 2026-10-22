@@ -9,8 +9,8 @@ Kelo Hub is an early-stage workspace prototype for organizing an organization's 
 - The account holder is redirected to their AT Protocol authorization service; Kelo Hub does not collect the account password or email verification code.
 - OAuth callback and session restoration run server-side. The browser receives an HttpOnly session cookie; OAuth access/refresh tokens are kept in the server-side session store.
 - OAuth consent currently requests only the `atproto` scope, which confirms identity. It does **not** grant permission to read or publish posts, access private messages, or manage other accounts.
-- Settings preferences are saved in the current browser. Language preference and some future-action toggles are not yet connected to all product behavior.
-- Multi-account management, durable session storage, organization membership/roles, content synchronization, publishing, inbox, comments, mentions, and persistent audit logs are not implemented yet.
+- Settings preferences are saved in the current browser. The admin dashboard can link up to 25 AT Protocol identities through separate OAuth consent flows; the signed account list is stored in an HttpOnly cookie. Language preference and some future-action toggles are not yet connected to all product behavior.
+- Linking additional AT Protocol accounts through each account's own OAuth consent is implemented for the prototype. Durable session storage, organization membership/roles, content synchronization, publishing, inbox, comments, mentions, and persistent audit logs are not implemented yet.
 
 **Not production-ready:** OAuth state and session stores currently use process memory. A Render restart, redeploy, or instance change may interrupt login or invalidate existing sessions. Do not onboard sensitive accounts until persistent encrypted storage, authorization checks, rate limiting, and end-to-end OAuth tests are in place.
 
