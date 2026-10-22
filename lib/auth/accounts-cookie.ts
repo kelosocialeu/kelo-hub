@@ -1,4 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import type { NextResponse } from "next/server";
 
 export const PRIMARY_DID_COOKIE = "kelo_hub_atproto_did";
 export const LINK_INTENT_COOKIE = "kelo_hub_atproto_link_intent";
@@ -39,7 +40,7 @@ export function readAccountsCookie(value?: string): string[] | null {
   }
 }
 
-export function setAccountsCookie(response: { cookies: { set: (name: string, value: string, options: Record<string, unknown>) => unknown } }, dids: string[]) {
+export function setAccountsCookie(response: NextResponse, dids: string[]) {
   response.cookies.set(ACCOUNTS_COOKIE, signAccountsCookie(dids), {
     httpOnly: true,
     secure: (process.env.APP_BASE_URL || "").startsWith("https://") || process.env.NODE_ENV === "production",
