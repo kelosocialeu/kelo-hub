@@ -34,7 +34,7 @@ Local OAuth uses the AT Protocol loopback client. In production, configure the e
 
 ## Render environment variables
 
-- `APP_BASE_URL=https://kelo-hub-alpha.onrender.com` (or the actual public URL for the service).
+- `APP_BASE_URL=https://kelo-hub.onrender.com` (or the actual public URL for the service).
 - `ATPROTO_OAUTH_PRIVATE_KEY`: generate using `npm run gen-key`, then store the JSON output as a Render secret. Never commit the real key.
 
 The OAuth client metadata endpoint is `/oauth-client-metadata.json`, the callback is `/oauth/callback`, and the public signing keys are exposed at `/.well-known/jwks.json`.
