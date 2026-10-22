@@ -30,7 +30,7 @@ function getClientMetadata(): OAuthClientMetadataInput {
   if (IS_PRODUCTION) {
     return {
       client_id: `${APP_BASE_URL}/oauth-client-metadata.json`,
-      client_name: "Kelo Hub Alpha",
+      client_name: "Kelo Hub",
       client_uri: APP_BASE_URL,
       redirect_uris: [`${APP_BASE_URL}/oauth/callback`],
       grant_types: ["authorization_code", "refresh_token"],
